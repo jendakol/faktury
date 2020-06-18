@@ -1,12 +1,23 @@
+// TODO WTH is this needed
+#[macro_use]
+extern crate diesel;
+
+use std::env;
 use std::fs::File;
 use std::io::BufWriter;
 use std::iter::FromIterator;
 use std::net::SocketAddr;
 use std::{io, thread};
 
+use actix_rt::Builder;
 use actix_web::body::{Body, BodyStream};
 use actix_web::web::Bytes;
-use actix_web::{get, head, middleware, post, web, App, HttpResponse, HttpServer, Responder};
+use actix_web::{
+    get, head, middleware, post, web, App, HttpRequest, HttpResponse, HttpServer, Responder,
+};
+use diesel::insert_into;
+use diesel::mysql::MysqlConnection;
+use diesel::prelude::*;
 use futures::channel::mpsc;
 use futures::sink::Sink;
 use futures::{executor, SinkExt, StreamExt};
@@ -14,11 +25,39 @@ use log::{debug, info};
 use printpdf::*;
 use qrcode_generator::QrCodeEcc;
 
-fn get_pdf(output: &mut dyn io::Write) {
+use dotenv::dotenv;
+use schema::contacts::dsl::*;
+use schema::invoice_rows::dsl::*;
+use schema::invoices::dsl::*;
+
+use crate::models::Contact;
+
+// TODO embed_migrations!
+
+pub mod models;
+pub mod schema;
+
+pub fn establish_connection() -> MysqlConnection {
+    dotenv().ok();
+
+    let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
+    MysqlConnection::establish(&database_url)
+        .expect(&format!("Error connecting to {}", database_url))
+}
+
+fn get_pdf(contact_name: &str, output: &mut dyn io::Write) {
     let qrcode = qrcode_generator::to_image("Zadek!!!", QrCodeEcc::Low, 512).unwrap();
 
     let (doc, page1, layer1) = PdfDocument::new("Faktura", Mm(210.0), Mm(297.0), "Layer 1");
     let current_layer = doc.get_page(page1).get_layer(layer1);
+
+    // TODO doesn't work! let font = doc.add_builtin_font(BuiltinFont::TimesRoman).unwrap();
+    // TODO doesn't work! let font2 = doc.add_external_font(File::open("texgyreheroscn-regular.otf").unwrap()).unwrap();
+    let font2 = doc
+        .add_external_font(File::open("X360.ttf").unwrap())
+        .unwrap();
+
+    current_layer.use_text(contact_name, 20, Mm(100.0), Mm(100.0), &font2);
 
     let points1 = vec![
         (Point::new(Mm(20.0), Mm(297.0 - 20.0)), false),
@@ -108,22 +147,30 @@ where
     }
 }
 
-fn foo() -> impl futures::Stream<Item = Vec<u8>> {
+fn foo(contact_name: String) -> impl futures::Stream<Item = Vec<u8>> {
     let (tx, rx) = mpsc::channel(5);
 
     let mut w = MyWrite(tx);
 
-    thread::spawn(move || get_pdf(&mut w));
+    thread::spawn(move || get_pdf(&contact_name, &mut w));
 
     rx
 }
 
 #[get("/download")]
-async fn get() -> impl Responder {
-    let stream = foo();
+async fn get(rctx: web::Data<RequestContext>) -> impl Responder {
+    let results = contacts.load::<Contact>(&rctx.db).unwrap();
+
+    let contact = results.first().unwrap();
+
+    let stream = foo(contact.name.clone());
     let stream = stream.map(Bytes::from).map(Ok::<Bytes, ()>);
 
     HttpResponse::Ok().body(BodyStream::new(stream)).await
+}
+
+struct RequestContext {
+    db: MysqlConnection,
 }
 
 #[actix_rt::main]
@@ -135,7 +182,10 @@ async fn main() -> std::io::Result<()> {
     info!("Starting server on {}", addr);
 
     HttpServer::new(|| {
+        let connection = establish_connection();
+
         App::new()
+            .app_data(web::Data::new(RequestContext { db: connection }))
             .wrap(middleware::Compress::default())
             .service(get)
             .default_service(web::route().to(HttpResponse::NotFound))
