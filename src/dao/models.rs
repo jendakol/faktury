@@ -1,10 +1,29 @@
-use super::schema::*;
 use chrono::NaiveDateTime as Datetime;
 
-#[derive(Debug, Queryable)]
+use super::schema::*;
+
+#[derive(Identifiable, Queryable, Associations, PartialEq, Debug, Clone)]
+pub struct Entrepreneur {
+    pub id: i32,
+    pub code: String,
+    pub name: String,
+    pub address: String,
+}
+
+#[derive(Debug, Insertable)]
+#[table_name = "entrepreneurs"]
+pub struct NewEntrepreneur<'a> {
+    pub code: &'a str,
+    pub name: &'a str,
+    pub address: &'a str,
+}
+
+#[derive(Identifiable, Queryable, Associations, PartialEq, Debug, Clone)]
+#[belongs_to(Entrepreneur)]
 pub struct Contact {
     pub id: i32,
     pub code: String,
+    pub entrepreneur_id: i32,
     pub name: String,
     pub address: String,
 }
@@ -13,13 +32,17 @@ pub struct Contact {
 #[table_name = "contacts"]
 pub struct NewContact<'a> {
     pub code: &'a str,
+    pub entrepreneur_id: i32,
     pub name: &'a str,
     pub address: &'a str,
 }
 
-#[derive(Debug, Queryable)]
+#[derive(Identifiable, Queryable, Associations, PartialEq, Debug, Clone)]
+#[belongs_to(Entrepreneur)]
 pub struct Invoice {
     pub id: i32,
+    pub code: String,
+    pub entrepreneur_id: i32,
     pub contact_id: i32,
     pub created: Datetime,
     pub pay_until: Datetime,
@@ -29,13 +52,16 @@ pub struct Invoice {
 #[derive(Debug, Insertable)]
 #[table_name = "invoices"]
 pub struct NewInvoice {
+    pub code: String,
+    pub entrepreneur_id: i32,
     pub contact_id: i32,
     pub created: Datetime,
     pub pay_until: Datetime,
     pub payed: Datetime,
 }
 
-#[derive(Debug, Queryable)]
+#[derive(Identifiable, Queryable, Associations, PartialEq, Debug, Clone)]
+#[belongs_to(Invoice)]
 pub struct InvoiceRow {
     pub id: i32,
     pub invoice_id: i32,

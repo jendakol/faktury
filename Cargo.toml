@@ -8,6 +8,8 @@ edition = "2018"
 actix-rt = "~1.0"
 actix-web = "~2.0"
 env_logger = "~0.7"
+err-context = "~0.1"
+config = "~0.10"
 diesel = { version = "~1.4", features = ["mysql", "chrono"] }
 diesel_migrations = "~1.4"
 dotenv = "~0.15"
@@ -16,3 +18,4 @@ chrono = "~0.4"
 log = "~0.4"
 qrcode-generator = "~1.0"
 printpdf = "~0.3"
+serde = { version = "~1.0", features = ["derive"] }

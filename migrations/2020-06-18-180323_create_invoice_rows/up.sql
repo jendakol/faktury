@@ -8,6 +8,3 @@ CREATE TABLE `invoice_rows`
     PRIMARY KEY (`id`),
     UNIQUE (`invoice_id`)
 ) ENGINE = InnoDB;
-
-ALTER TABLE `invoice_rows`
-    ADD FOREIGN KEY (`invoice_id`) REFERENCES `invoices` (`id`) ON DELETE CASCADE ON UPDATE RESTRICT;
