@@ -14,7 +14,6 @@ use log::info;
 
 use crate::config::AppConfig;
 use crate::dao::Dao;
-use crate::handlers::get;
 use crate::pdf::PdfManager;
 
 mod config;
@@ -58,7 +57,8 @@ async fn main() {
                 pdf_manager: pdf_manager.clone(),
             }))
             .wrap(middleware::Compress::default())
-            .service(get)
+            .service(handlers::get)
+            .service(handlers::ajax_action)
             .default_service(web::route().to(HttpResponse::NotFound))
     })
     .bind(addr)

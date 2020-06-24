@@ -11,7 +11,7 @@ use err_context::AnyError;
 use log::{debug, warn};
 
 use crate::config::DbConfig;
-use crate::dao::models::{Contact, Entrepreneur};
+pub use crate::dao::models::{Contact, Entrepreneur, Invoice, InvoiceRow};
 
 mod models;
 mod schema;
@@ -61,36 +61,29 @@ impl TryFrom<DbConfig> for Dao {
 no_arg_sql_function!(last_insert_id, sql_types::Integer);
 
 impl Dao {
-    fn with_connection<F, R>(&self, f: F) -> impl Future<Output = R>
-    where
-        F: FnOnce(&MysqlConnection) -> R,
-    {
-        let lock = self.connection.clone();
-
-        futures::future::lazy(move |_| {
-            let conn = lock.lock().unwrap();
-            let conn: &MysqlConnection = conn.deref();
-
-            f(conn)
-        })
-    }
-
-    fn last_inserted_id(conn: &MysqlConnection) -> DaoResult<i32> {
-        select(last_insert_id).first(conn).map_err(AnyError::from)
-    }
-
-    fn map_db_error(err: diesel::result::Error) -> AnyError {
-        AnyError::from(format!("DB error: {}", err))
-    }
-
-    pub async fn load_contact(&self) -> Contact {
+    pub async fn load_contact(&self) -> DaoResult<Option<Contact>> {
         use schema::contacts::dsl::*;
 
         let results = self
-            .with_connection(|conn| contacts.load::<Contact>(conn).unwrap())
-            .await;
+            .with_connection(|conn| contacts.load::<Contact>(conn))
+            .await?;
 
-        results.first().unwrap().clone()
+        Ok(results.first().cloned())
+    }
+
+    pub async fn get_invoice(&self, id: u32) -> DaoResult<Option<Invoice>> {
+        use schema::invoices::dsl as table;
+
+        let results = self
+            .with_connection(|conn| {
+                table::invoices
+                    .filter(table::id.eq(id as i32))
+                    .limit(1)
+                    .load::<Invoice>(conn)
+            })
+            .await?;
+
+        Ok(results.first().cloned())
     }
 
     pub async fn insert_entrepreneur(
@@ -111,16 +104,7 @@ impl Dao {
                     ))
                     .execute(conn)
                     .map_err(Self::map_db_error)
-                    .and_then(|r| {
-                        if r == 1 {
-                            Self::last_inserted_id(conn)
-                        } else if r == 0 {
-                            Err(AnyError::from("No inserted row!"))
-                        } else {
-                            debug!("Weird - more than 1 affected row!");
-                            Err(AnyError::from("More than 1 inserted row!"))
-                        }
-                    })
+                    .and_then(|r| Self::get_new_id(conn, r))
             })
             .await?;
 
@@ -152,16 +136,7 @@ impl Dao {
                     ))
                     .execute(conn)
                     .map_err(Self::map_db_error)
-                    .and_then(|r| {
-                        if r == 1 {
-                            Self::last_inserted_id(conn)
-                        } else if r == 0 {
-                            Err(AnyError::from("No inserted row!"))
-                        } else {
-                            debug!("Weird - more than 1 affected row!");
-                            Err(AnyError::from("More than 1 inserted row!"))
-                        }
-                    })
+                    .and_then(|r| Self::get_new_id(conn, r))
             })
             .await?;
 
@@ -172,5 +147,38 @@ impl Dao {
             name: name.to_owned(),
             address: addr.to_owned(),
         })
+    }
+
+    fn with_connection<F, R>(&self, f: F) -> impl Future<Output = R>
+    where
+        F: FnOnce(&MysqlConnection) -> R,
+    {
+        let lock = self.connection.clone();
+
+        futures::future::lazy(move |_| {
+            let conn = lock.lock().unwrap();
+            let conn: &MysqlConnection = conn.deref();
+
+            f(conn)
+        })
+    }
+
+    fn get_new_id(conn: &MysqlConnection, r: usize) -> Result<i32, AnyError> {
+        if r == 1 {
+            Self::last_inserted_id(conn)
+        } else if r == 0 {
+            Err(AnyError::from("No inserted row!"))
+        } else {
+            debug!("Weird - more than 1 affected row!");
+            Err(AnyError::from("More than 1 inserted row!"))
+        }
+    }
+
+    fn last_inserted_id(conn: &MysqlConnection) -> DaoResult<i32> {
+        select(last_insert_id).first(conn).map_err(AnyError::from)
+    }
+
+    fn map_db_error(err: diesel::result::Error) -> AnyError {
+        AnyError::from(format!("DB error: {}", err))
     }
 }

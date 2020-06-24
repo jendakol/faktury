@@ -1,8 +1,9 @@
 use chrono::NaiveDateTime as Datetime;
+use frunk::LabelledGeneric;
 
 use super::schema::*;
 
-#[derive(Identifiable, Queryable, Associations, PartialEq, Debug, Clone)]
+#[derive(Identifiable, Queryable, Associations, LabelledGeneric, PartialEq, Debug, Clone)]
 pub struct Entrepreneur {
     pub id: i32,
     pub code: String,
@@ -18,7 +19,7 @@ pub struct NewEntrepreneur<'a> {
     pub address: &'a str,
 }
 
-#[derive(Identifiable, Queryable, Associations, PartialEq, Debug, Clone)]
+#[derive(Identifiable, Queryable, Associations, LabelledGeneric, PartialEq, Debug, Clone)]
 #[belongs_to(Entrepreneur)]
 pub struct Contact {
     pub id: i32,
@@ -37,7 +38,7 @@ pub struct NewContact<'a> {
     pub address: &'a str,
 }
 
-#[derive(Identifiable, Queryable, Associations, PartialEq, Debug, Clone)]
+#[derive(Identifiable, Queryable, Associations, LabelledGeneric, PartialEq, Debug, Clone)]
 #[belongs_to(Entrepreneur)]
 pub struct Invoice {
     pub id: i32,
@@ -46,7 +47,7 @@ pub struct Invoice {
     pub contact_id: i32,
     pub created: Datetime,
     pub pay_until: Datetime,
-    pub payed: Datetime,
+    pub payed: Option<Datetime>,
 }
 
 #[derive(Debug, Insertable)]
@@ -57,10 +58,10 @@ pub struct NewInvoice {
     pub contact_id: i32,
     pub created: Datetime,
     pub pay_until: Datetime,
-    pub payed: Datetime,
+    pub payed: Option<Datetime>,
 }
 
-#[derive(Identifiable, Queryable, Associations, PartialEq, Debug, Clone)]
+#[derive(Identifiable, Queryable, Associations, LabelledGeneric, PartialEq, Debug, Clone)]
 #[belongs_to(Invoice)]
 pub struct InvoiceRow {
     pub id: i32,
