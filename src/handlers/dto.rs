@@ -40,8 +40,43 @@ pub struct InvoiceRow {
     pub id: i32,
     pub invoice_id: i32,
     pub item_name: String,
-    pub item_price: i32,
+    pub item_price: f32,
     pub item_count: i8,
+}
+
+// ****** New*:
+
+#[derive(Deserialize, Debug)]
+pub struct NewContact {
+    pub code: String,
+    pub entrepreneur_id: u32,
+    pub name: String,
+    pub address: String,
+}
+
+#[derive(Deserialize, Debug)]
+pub struct NewEntrepreneur {
+    pub code: String,
+    pub name: String,
+    pub address: String,
+}
+
+#[derive(Deserialize, Debug)]
+pub struct NewInvoice {
+    pub code: String,
+    pub entrepreneur_id: u32,
+    pub contact_id: u32,
+    pub created: Datetime,
+    pub pay_until: Datetime,
+    pub payed: Option<Datetime>,
+}
+
+#[derive(Deserialize, Debug)]
+pub struct NewInvoiceRow {
+    pub invoice_id: u32,
+    pub item_name: String,
+    pub item_price: f32,
+    pub item_count: u8,
 }
 
 // ******
@@ -66,6 +101,30 @@ impl From<crate::dao::Invoice> for Invoice {
 
 impl From<crate::dao::InvoiceRow> for InvoiceRow {
     fn from(i: crate::dao::InvoiceRow) -> Self {
+        frunk::labelled_convert_from(i)
+    }
+}
+
+impl From<Entrepreneur> for crate::dao::Entrepreneur {
+    fn from(i: Entrepreneur) -> Self {
+        frunk::labelled_convert_from(i)
+    }
+}
+
+impl From<Contact> for crate::dao::Contact {
+    fn from(i: Contact) -> Self {
+        frunk::labelled_convert_from(i)
+    }
+}
+
+impl From<Invoice> for crate::dao::Invoice {
+    fn from(i: Invoice) -> Self {
+        frunk::labelled_convert_from(i)
+    }
+}
+
+impl From<InvoiceRow> for crate::dao::InvoiceRow {
+    fn from(i: InvoiceRow) -> Self {
         frunk::labelled_convert_from(i)
     }
 }
