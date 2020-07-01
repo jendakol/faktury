@@ -5,8 +5,10 @@ authors = ["Jan Kolena <jendakolena@gmail.com>"]
 edition = "2018"
 
 [dependencies]
+actix-cors = "~0.2"
 actix-rt = "~1.0"
 actix-web = "~2.0"
+actix-files = "~0.2"
 env_logger = "~0.7"
 err-context = "~0.1"
 config = "~0.10"

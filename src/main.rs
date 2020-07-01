@@ -7,10 +7,13 @@ extern crate diesel_migrations;
 use std::convert::TryFrom;
 use std::env;
 use std::net::SocketAddr;
+use std::path::PathBuf;
 use std::str::FromStr;
 
-use actix_web::{middleware, web, App, HttpResponse, HttpServer};
-use log::info;
+use actix_cors::Cors;
+use actix_files::NamedFile;
+use actix_web::{middleware, web, App, HttpRequest, HttpServer, Result as ActixResult};
+use log::{info, trace};
 
 use crate::config::AppConfig;
 use crate::dao::Dao;
@@ -24,6 +27,23 @@ mod pdf;
 pub struct RequestContext {
     dao: Dao,
     pdf_manager: PdfManager,
+}
+
+async fn web_ui(req: HttpRequest) -> ActixResult<NamedFile> {
+    let path: PathBuf = req.match_info().query("filename").parse().unwrap();
+
+    trace!("Requesting {:?}", path);
+
+    if path.starts_with("imgs") || path.starts_with("css") || path.starts_with("js") {
+        let mut resource_path = PathBuf::from("static");
+        resource_path.push(path);
+
+        trace!("Returning {:?} resource", resource_path);
+        Ok(NamedFile::open(resource_path)?)
+    } else {
+        trace!("Returning index file");
+        Ok(NamedFile::open("static/index.html")?)
+    }
 }
 
 #[actix_rt::main]
@@ -56,6 +76,7 @@ async fn main() {
                 dao: dao.clone(),
                 pdf_manager: pdf_manager.clone(),
             }))
+            .wrap(Cors::new().supports_credentials().finish()) // TODO limit
             .wrap(middleware::Compress::default())
             .service(handlers::get_entrepreneur)
             .service(handlers::get_contact)
@@ -75,7 +96,7 @@ async fn main() {
             .service(handlers::delete_contact)
             .service(handlers::delete_invoice)
             .service(handlers::delete_invoice_row)
-            .default_service(web::route().to(HttpResponse::NotFound))
+            .route("/{filename:.*}", web::get().to(web_ui))
     })
     .bind(addr)
     .unwrap() // let it fail
