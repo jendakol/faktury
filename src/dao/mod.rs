@@ -159,7 +159,7 @@ impl Dao {
 
         self.with_connection(|conn| {
             table::invoice_rows
-                .filter(table::id.eq(invoice_id as i32))
+                .filter(table::invoice_id.eq(invoice_id as i32))
                 .load(conn)
         })
         .await
@@ -294,6 +294,7 @@ impl Dao {
 
             update(table::entrepreneurs)
                 .set(ent)
+                .filter(table::id.eq(ent.id))
                 .execute(conn)
                 .map_err(Self::map_db_error)
         })
@@ -308,6 +309,7 @@ impl Dao {
 
             update(table::contacts)
                 .set(contact)
+                .filter(table::id.eq(contact.id))
                 .execute(conn)
                 .map_err(Self::map_db_error)
         })
@@ -322,6 +324,7 @@ impl Dao {
 
             update(table::invoices)
                 .set(invoice)
+                .filter(table::id.eq(invoice.id))
                 .execute(conn)
                 .map_err(Self::map_db_error)
         })
@@ -336,6 +339,7 @@ impl Dao {
 
             update(table::invoice_rows)
                 .set(invoice_row)
+                .filter(table::id.eq(invoice_row.id))
                 .execute(conn)
                 .map_err(Self::map_db_error)
         })

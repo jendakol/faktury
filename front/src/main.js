@@ -23,6 +23,22 @@ Vue.use(Snotify, {
 import Datetime from 'vue-datetime'
 Vue.use(Datetime);
 
+import VCurrencyField from 'v-currency-field'
+Vue.use(VCurrencyField, {
+  locale: 'cs-CZ',
+  decimalLength: 1,
+  autoDecimalMode: false,
+  min: 0,
+  max: null,
+  defaultValue: 0,
+  valueAsInteger: false,
+  allowNegative: false,
+})
+
+import VueLodash from 'vue-lodash'
+import lodash from 'lodash'
+Vue.use(VueLodash, { lodash })
+
 import 'vue-datetime/dist/vue-datetime.css'
 import 'vuetify/dist/vuetify.min.css'
 

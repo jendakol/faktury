@@ -10,10 +10,13 @@
   "dependencies": {
     "axios": "^0.19.2",
     "core-js": "^3.6.4",
+    "lodash": "^4.17.15",
     "luxon": "^1.24.1",
+    "v-currency-field": "^3.0.11",
     "vue": "^2.6.11",
     "vue-context": "^5.2.0",
     "vue-datetime": "^1.0.0-beta.13",
+    "vue-lodash": "^2.1.2",
     "vue-router": "^3.3.4",
     "vue-snotify": "^3.2.1",
     "vuetify": "^2.2.11",

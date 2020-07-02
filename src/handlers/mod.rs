@@ -189,7 +189,7 @@ pub async fn update_entrepreneur(
     with_ok(
         ctx.dao
             .update_entrepreneur(&entrepreneur.into_inner().into()),
-        |_| HttpResponse::Ok().finish(),
+        |_| HttpResponse::Ok().body("{\"success\":true}"),
     )
     .await
 }
@@ -202,7 +202,7 @@ pub async fn update_contact(
     debug!("Updating contact: {:?}", contact);
 
     with_ok(ctx.dao.update_contact(&contact.into_inner().into()), |_| {
-        HttpResponse::Ok().finish()
+        HttpResponse::Ok().body("{\"success\":true}")
     })
     .await
 }
@@ -215,7 +215,7 @@ pub async fn update_invoice(
     debug!("Deleting invoice: {:?}", invoice);
 
     with_ok(ctx.dao.update_invoice(&invoice.into_inner().into()), |_| {
-        HttpResponse::Ok().finish()
+        HttpResponse::Ok().body("{\"success\":true}")
     })
     .await
 }
@@ -228,7 +228,7 @@ pub async fn update_invoice_row(
     debug!("Deleting invoice row: {:?}", row);
 
     with_ok(ctx.dao.update_invoice_row(&row.into_inner().into()), |_| {
-        HttpResponse::Ok().finish()
+        HttpResponse::Ok().body("{\"success\":true}")
     })
     .await
 }
@@ -241,7 +241,7 @@ pub async fn delete_entrepreneur(
     debug!("Deleting entrepreneur ID {}", id);
 
     with_ok(ctx.dao.delete_entrepreneur(id.into_inner()), |_| {
-        HttpResponse::Ok().finish()
+        HttpResponse::Ok().body("{\"success\":true}")
     })
     .await
 }
@@ -251,7 +251,7 @@ pub async fn delete_contact(id: web::Path<u32>, ctx: web::Data<RequestContext>) 
     debug!("Deleting contact ID {}", id);
 
     with_ok(ctx.dao.delete_contact(id.into_inner()), |_| {
-        HttpResponse::Ok().finish()
+        HttpResponse::Ok().body("{\"success\":true}")
     })
     .await
 }
@@ -261,7 +261,7 @@ pub async fn delete_invoice(id: web::Path<u32>, ctx: web::Data<RequestContext>) 
     debug!("Updating invoice ID {}", id);
 
     with_ok(ctx.dao.delete_invoice(id.into_inner()), |_| {
-        HttpResponse::Ok().finish()
+        HttpResponse::Ok().body("{\"success\":true}")
     })
     .await
 }
@@ -274,7 +274,7 @@ pub async fn delete_invoice_row(
     debug!("Updating invoice row ID {}", id);
 
     with_ok(ctx.dao.delete_invoice_row(id.into_inner()), |_| {
-        HttpResponse::Ok().finish()
+        HttpResponse::Ok().body("{\"success\":true}")
     })
     .await
 }

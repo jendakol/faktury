@@ -47,6 +47,7 @@ pub struct InvoiceRow {
 // ****** New*:
 
 #[derive(Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
 pub struct NewContact {
     pub code: String,
     pub entrepreneur_id: u32,
@@ -55,6 +56,7 @@ pub struct NewContact {
 }
 
 #[derive(Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
 pub struct NewEntrepreneur {
     pub code: String,
     pub name: String,
@@ -62,6 +64,7 @@ pub struct NewEntrepreneur {
 }
 
 #[derive(Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
 pub struct NewInvoice {
     pub code: String,
     pub entrepreneur_id: u32,
@@ -72,6 +75,7 @@ pub struct NewInvoice {
 }
 
 #[derive(Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
 pub struct NewInvoiceRow {
     pub invoice_id: u32,
     pub item_name: String,
