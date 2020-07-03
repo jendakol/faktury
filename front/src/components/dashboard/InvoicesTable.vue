@@ -1,6 +1,6 @@
 <template>
     <div>
-        <v-card>
+        <v-card width="1000" outlined raised :loading="loading">
             <v-card-title>
                 Your invoices
             </v-card-title>
@@ -21,11 +21,12 @@
         mounted() {
             this.ajax('get/invoices/1', {}, 1000).then(data => {
                 this.rows = data;
+                this.loading = false;
             });
         },
         data() {
             return {
-                search: '',
+                loading: true,
                 rows: [],
             }
         },

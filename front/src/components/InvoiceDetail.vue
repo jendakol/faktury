@@ -1,20 +1,16 @@
 <template>
-    <v-container>
-        <v-row justify="center">
-            <v-card width="1200">
-                <v-card-title>
-                    Invoice {{ invoiceData.code }}
-                </v-card-title>
+        <v-card width="1200" outlined raised :loading="loading">
+            <v-card-title>
+                Invoice {{ invoiceData.code }}
+            </v-card-title>
 
-                <!--                {{ invoiceData }}-->
+            <!--                {{ invoiceData }}-->
 
-                <InvoiceRows :rows="invoiceRows" :invoiceId="$route.params.id"
-                             @row-deleted="rowDeleted"
-                             @row-updated="rowUpdated"
-                             @row-inserted="rowInserted"/>
-            </v-card>
-        </v-row>
-    </v-container>
+            <InvoiceRows :rows="invoiceRows" :invoiceId="$route.params.id"
+                         @row-deleted="rowDeleted"
+                         @row-updated="rowUpdated"
+                         @row-inserted="rowInserted"/>
+        </v-card>
 
 </template>
 
@@ -27,15 +23,15 @@
             InvoiceRows
         },
         mounted() {
-            this.ajax("get/invoice/" + this.$route.params.id, {}, 1000).then(r => {
-                this.invoiceData = r;
-            })
-            this.ajax("get/invoice-rows/" + this.$route.params.id, {}, 1000).then(r => {
-                this.invoiceRows = r;
+            this.ajax("get/invoice-with-rows/" + this.$route.params.id, {}, 1000).then(r => {
+                this.invoiceData = r.invoice;
+                this.invoiceRows = r.rows;
+                this.loading = false
             })
         },
         data() {
             return {
+                loading: true,
                 invoiceData: {},
                 invoiceRows: [],
             }
@@ -57,7 +53,7 @@
                     return e.id !== id
                 }))
             },
-            rowInserted: function(row) {
+            rowInserted: function (row) {
                 console.log("Inserted new invoice row:" + JSON.stringify(row))
 
                 this.$set(this, 'invoiceRows', this.lodash.concat(this.invoiceRows, row))

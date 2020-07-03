@@ -96,6 +96,38 @@ impl Dao {
         Ok(results.pop())
     }
 
+    pub async fn get_invoice_with_rows(
+        &self,
+        id: u32,
+    ) -> DaoResult<Option<(Invoice, Vec<InvoiceRow>)>> {
+        use schema::*;
+
+        let results: Vec<(Invoice, Option<InvoiceRow>)> = self
+            .with_connection(|conn| {
+                invoices::table
+                    .left_outer_join(invoice_rows::table)
+                    .filter(invoices::id.eq(id as i32))
+                    .load(conn)
+            })
+            .await
+            .map_err(Self::map_db_error)?;
+
+        let mut invoice_opt = None;
+        let mut rows = Vec::new();
+
+        results.into_iter().for_each(|(invoice, row)| {
+            if invoice_opt.is_none() {
+                invoice_opt = Some(invoice);
+            }
+
+            if let Some(row) = row {
+                rows.push(row)
+            }
+        });
+
+        Ok(invoice_opt.map(|inv| (inv, rows)))
+    }
+
     pub async fn get_invoice_row(&self, id: u32) -> DaoResult<Option<InvoiceRow>> {
         use schema::invoice_rows::dsl as table;
 

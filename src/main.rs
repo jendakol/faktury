@@ -70,6 +70,7 @@ async fn main() {
             .service(handlers::get_entrepreneur)
             .service(handlers::get_contact)
             .service(handlers::get_invoice)
+            .service(handlers::get_invoice_with_rows)
             .service(handlers::list_contacts)
             .service(handlers::list_invoices)
             .service(handlers::list_invoice_rows)

@@ -6,8 +6,8 @@ use log::{debug, warn};
 
 use crate::dao::DaoResult;
 use crate::handlers::dto::{
-    Contact, Entrepreneur, Invoice, InvoiceRow, NewContact, NewEntrepreneur, NewInvoice,
-    NewInvoiceRow,
+    Contact, Entrepreneur, Invoice, InvoiceRow, InvoiceWithRows, NewContact, NewEntrepreneur,
+    NewInvoice, NewInvoiceRow,
 };
 use crate::RequestContext;
 
@@ -48,6 +48,27 @@ pub async fn get_invoice(
     with_found(ctx.dao.get_invoice(invoice_id.into_inner()), |i| {
         HttpResponse::Ok().json::<dto::Invoice>(i.into())
     })
+    .await
+}
+
+#[post("/data-get/invoice-with-rows/{id}")]
+pub async fn get_invoice_with_rows(
+    invoice_id: web::Path<u32>,
+    ctx: web::Data<RequestContext>,
+) -> impl Responder {
+    debug!("Getting invoice data incl. rows, ID {}", invoice_id);
+
+    with_found(
+        ctx.dao.get_invoice_with_rows(invoice_id.into_inner()),
+        |(invoice, rows)| {
+            let iwr = InvoiceWithRows {
+                invoice: invoice.into(),
+                rows: rows.into_iter().map(|r| r.into()).collect(),
+            };
+
+            HttpResponse::Ok().json(iwr)
+        },
+    )
     .await
 }
 

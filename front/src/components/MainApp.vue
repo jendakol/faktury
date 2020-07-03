@@ -20,12 +20,16 @@
         </v-navigation-drawer>
 
         <v-main>
-            <v-container class="fill-height" fluid>
-                <v-content>
-                    <transition name="fade">
-                        <router-view/>
-                    </transition>
-                </v-content>
+            <v-container fluid>
+                <v-row>
+                    <v-col cols="12">
+                        <v-row align="top" justify="center">
+                            <transition name="fade">
+                                <router-view/>
+                            </transition>
+                        </v-row>
+                    </v-col>
+                </v-row>
             </v-container>
         </v-main>
 

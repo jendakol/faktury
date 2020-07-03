@@ -44,6 +44,13 @@ pub struct InvoiceRow {
     pub item_count: i8,
 }
 
+#[derive(Serialize, Debug, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct InvoiceWithRows {
+    pub invoice: Invoice,
+    pub rows: Vec<InvoiceRow>,
+}
+
 // ****** New*:
 
 #[derive(Deserialize, Debug)]
