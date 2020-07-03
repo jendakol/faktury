@@ -30,7 +30,7 @@ pub struct RequestContext {
 }
 
 async fn web_ui(req: HttpRequest) -> ActixResult<NamedFile> {
-    let path: PathBuf = req.match_info().query("filename").parse().unwrap();
+    let path: PathBuf = req.match_info().query("filename").parse()?;
 
     trace!("Requesting {:?}", path);
 
@@ -56,17 +56,6 @@ async fn main() {
     let dao = Dao::try_from(config.database).unwrap(); // let it fail
     let pdf_manager = PdfManager::new().unwrap(); // let it fail
     let addr = SocketAddr::from_str(&config.http.listen).unwrap(); // let it fail
-
-    // insert test data; don't fail, if they exist
-    let ent_id = dao
-        .insert_entrepreneur("123456789", "Pokusný", "Prdelákov")
-        .await
-        .map(|e| e.id)
-        .unwrap_or(1);
-
-    let _ = dao
-        .insert_contact(ent_id as u32, "123456789", "Pokusný", "Prdelákov")
-        .await;
 
     info!("Starting server on {}", addr);
 
