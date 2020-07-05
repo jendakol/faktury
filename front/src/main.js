@@ -23,18 +23,6 @@ Vue.use(Snotify, {
 import Datetime from 'vue-datetime'
 Vue.use(Datetime);
 
-import VCurrencyField from 'v-currency-field'
-Vue.use(VCurrencyField, {
-  locale: 'cs-CZ',
-  decimalLength: 1,
-  autoDecimalMode: false,
-  min: 0,
-  max: null,
-  defaultValue: 0,
-  valueAsInteger: false,
-  allowNegative: false,
-})
-
 import VueLodash from 'vue-lodash'
 import lodash from 'lodash'
 Vue.use(VueLodash, { lodash })
@@ -59,6 +47,18 @@ import GlobalFunctions from "./global"
 Vue.mixin(GlobalFunctions)
 
 import StateStore from "./state_store";
+
+import VCurrencyField from 'v-currency-field'
+Vue.use(VCurrencyField, {
+  locale: StateStore.state.locale,
+  decimalLength: 1,
+  autoDecimalMode: false,
+  min: 0,
+  max: null,
+  defaultValue: 0,
+  valueAsInteger: false,
+  allowNegative: false,
+})
 
 new Vue({
   vuetify,

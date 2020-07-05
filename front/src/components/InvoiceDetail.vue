@@ -1,16 +1,16 @@
 <template>
-        <v-card width="1200" outlined raised :loading="loading">
-            <v-card-title>
-                Invoice {{ invoiceData.code }}
-            </v-card-title>
+    <v-card width="1200" outlined raised :loading="loading">
+        <v-card-title>
+            Invoice {{ invoiceData.code }}
+        </v-card-title>
 
-            <!--                {{ invoiceData }}-->
+        <!--                {{ invoiceData }}-->
 
-            <InvoiceRows :rows="invoiceRows" :invoiceId="$route.params.id"
-                         @row-deleted="rowDeleted"
-                         @row-updated="rowUpdated"
-                         @row-inserted="rowInserted"/>
-        </v-card>
+        <InvoiceRows :rows="invoiceRows" :invoiceId="Number($route.params.id)"
+                     @row-deleted="rowDeleted"
+                     @row-updated="rowUpdated"
+                     @row-inserted="rowInserted"/>
+    </v-card>
 
 </template>
 

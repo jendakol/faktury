@@ -69,7 +69,7 @@
         methods: {
             formatDate: function (isoString) {
                 let date = new Date(isoString)
-                return date.toLocaleString("cs-CZ")
+                return date.toLocaleString(this.$store.state.locale)
             }
         }
     }
