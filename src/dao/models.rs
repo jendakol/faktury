@@ -1,5 +1,5 @@
 use chrono::NaiveDateTime as Datetime;
-use frunk::LabelledGeneric;
+use frunk::{Generic, LabelledGeneric};
 
 use super::schema::*;
 
@@ -43,7 +43,15 @@ pub struct NewContact<'a> {
 }
 
 #[derive(
-    Identifiable, Queryable, Associations, AsChangeset, LabelledGeneric, PartialEq, Debug, Clone,
+    Identifiable,
+    Queryable,
+    Associations,
+    AsChangeset,
+    LabelledGeneric,
+    Generic,
+    PartialEq,
+    Debug,
+    Clone,
 )]
 #[belongs_to(Entrepreneur)]
 pub struct Invoice {

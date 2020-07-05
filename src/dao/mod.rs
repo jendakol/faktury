@@ -8,6 +8,7 @@ use diesel::mysql::MysqlConnection;
 use diesel::prelude::*;
 use diesel::{delete, insert_into, select};
 use diesel::{sql_types, update};
+use diesel_logger::LoggingConnection;
 use err_context::AnyError;
 use log::{debug, warn};
 
@@ -22,10 +23,11 @@ embed_migrations!("migrations");
 // TODO metrics
 
 pub type DaoResult<A> = Result<A, AnyError>;
+pub type InvoiceWithAllInfo = (Invoice, f64, String);
 
 #[derive(Clone)]
 pub struct Dao {
-    connection: Arc<Mutex<MysqlConnection>>,
+    connection: Arc<Mutex<LoggingConnection<MysqlConnection>>>,
 }
 
 impl TryFrom<DbConfig> for Dao {
@@ -53,6 +55,7 @@ impl TryFrom<DbConfig> for Dao {
             warn!("Error while migrating the DB: {}", f)
         }
 
+        let connection = LoggingConnection::new(connection);
         let connection = Arc::new(Mutex::new(connection));
 
         Ok(Dao { connection })
@@ -61,39 +64,40 @@ impl TryFrom<DbConfig> for Dao {
 
 no_arg_sql_function!(last_insert_id, sql_types::Integer);
 
+// TODO macro for select_single?
+
 impl Dao {
     // *** GET SINGLE:
 
     pub async fn get_entrepreneur(&self, id: u32) -> DaoResult<Option<Entrepreneur>> {
         use schema::entrepreneurs::dsl as table;
 
-        let mut results = self
-            .with_connection(|conn| {
-                table::entrepreneurs
-                    .filter(table::id.eq(id as i32))
-                    .limit(1)
-                    .load(conn)
-            })
-            .await
-            .map_err(Self::map_db_error)?;
-
-        Ok(results.pop())
+        self.with_connection(|conn| {
+            table::entrepreneurs
+                .filter(table::id.eq(id as i32))
+                .first(conn)
+                .optional()
+        })
+        .await
+        .map_err(Self::map_db_error)
     }
 
-    pub async fn get_invoice(&self, id: u32) -> DaoResult<Option<Invoice>> {
-        use schema::invoices::dsl as table;
+    pub async fn get_invoice(&self, id: u32) -> DaoResult<Option<InvoiceWithAllInfo>> {
+        use schema::*;
 
-        let mut results: Vec<_> = self
-            .with_connection(|conn| {
-                table::invoices
-                    .filter(table::id.eq(id as i32))
-                    .limit(1)
-                    .load(conn)
-            })
+        self.with_connection(|conn| {
+            invoices::table
+                .select((
+                    invoices::all_columns,
+                    diesel::dsl::sql::<diesel::sql_types::Double>("(select sum(invoice_rows.item_price) from invoice_rows where invoice_rows.invoice_id=invoices.id)"),
+                    diesel::dsl::sql::<diesel::sql_types::VarChar>("(select contacts.name from contacts where contacts.id=invoices.contact_id)"),
+                ))
+                .filter(invoices::id.eq(id as i32))
+                .first(conn)
+                .optional()
+        })
             .await
-            .map_err(Self::map_db_error)?;
-
-        Ok(results.pop())
+            .map_err(Self::map_db_error)
     }
 
     pub async fn get_invoice_with_rows(
@@ -131,33 +135,27 @@ impl Dao {
     pub async fn get_invoice_row(&self, id: u32) -> DaoResult<Option<InvoiceRow>> {
         use schema::invoice_rows::dsl as table;
 
-        let mut results: Vec<_> = self
-            .with_connection(|conn| {
-                table::invoice_rows
-                    .filter(table::id.eq(id as i32))
-                    .limit(1)
-                    .load(conn)
-            })
-            .await
-            .map_err(Self::map_db_error)?;
-
-        Ok(results.pop())
+        self.with_connection(|conn| {
+            table::invoice_rows
+                .filter(table::id.eq(id as i32))
+                .first(conn)
+                .optional()
+        })
+        .await
+        .map_err(Self::map_db_error)
     }
 
     pub async fn get_contact(&self, id: u32) -> DaoResult<Option<Contact>> {
         use schema::contacts::dsl as table;
 
-        let mut results = self
-            .with_connection(|conn| {
-                table::contacts
-                    .filter(table::id.eq(id as i32))
-                    .limit(1)
-                    .load(conn)
-            })
-            .await
-            .map_err(Self::map_db_error)?;
-
-        Ok(results.pop())
+        self.with_connection(|conn| {
+            table::contacts
+                .filter(table::id.eq(id as i32))
+                .first(conn)
+                .optional()
+        })
+        .await
+        .map_err(Self::map_db_error)
     }
 
     // *** GET LIST:
@@ -174,16 +172,22 @@ impl Dao {
         .map_err(Self::map_db_error)
     }
 
-    pub async fn get_invoices(&self, entrepreneur_id: u32) -> DaoResult<Vec<Invoice>> {
-        use schema::invoices::dsl as table;
+    pub async fn get_invoices(&self, entrepreneur_id: u32) -> DaoResult<Vec<InvoiceWithAllInfo>> {
+        use schema::*;
 
         self.with_connection(|conn| {
-            table::invoices
-                .filter(table::entrepreneur_id.eq(entrepreneur_id as i32))
+            invoices::table
+                .select((
+                    invoices::all_columns,
+                    // This is not exactly nice and type-safe piece of code. However, I'm unable to convince Diesel to create it by his own - I just don't know how. 
+                    diesel::dsl::sql::<diesel::sql_types::Double>("(select sum(invoice_rows.item_price) from invoice_rows where invoice_rows.invoice_id=invoices.id)"),
+                    diesel::dsl::sql::<diesel::sql_types::VarChar>("(select contacts.name from contacts where contacts.id=invoices.contact_id)"),
+                ))
+                .filter(invoices::entrepreneur_id.eq(entrepreneur_id as i32))
                 .load(conn)
         })
-        .await
-        .map_err(Self::map_db_error)
+            .await
+            .map_err(Self::map_db_error)
     }
 
     pub async fn get_invoice_rows(&self, invoice_id: u32) -> DaoResult<Vec<InvoiceRow>> {
@@ -264,7 +268,7 @@ impl Dao {
         ent_id: u32,
         cont_id: u32,
         pay_until: Datetime,
-    ) -> DaoResult<Invoice> {
+    ) -> DaoResult<InvoiceWithAllInfo> {
         let id = self
             .with_connection(|conn| {
                 use schema::invoices::dsl as table;
@@ -442,13 +446,13 @@ impl Dao {
 
     fn with_connection<F, R>(&self, f: F) -> impl Future<Output = R>
     where
-        F: FnOnce(&MysqlConnection) -> R,
+        F: FnOnce(&LoggingConnection<MysqlConnection>) -> R,
     {
         let lock = self.connection.clone();
 
         futures::future::lazy(move |_| {
             let conn = lock.lock().unwrap();
-            let conn: &MysqlConnection = conn.deref();
+            let conn = conn.deref();
 
             f(conn)
         })

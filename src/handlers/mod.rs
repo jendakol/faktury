@@ -46,7 +46,7 @@ pub async fn get_invoice(
     debug!("Getting invoice data, ID {}", invoice_id);
 
     with_found(ctx.dao.get_invoice(invoice_id.into_inner()), |i| {
-        HttpResponse::Ok().json::<dto::Invoice>(i.into())
+        HttpResponse::Ok().json::<dto::InvoiceWithAllInfo>(i.into())
     })
     .await
 }
@@ -106,7 +106,8 @@ pub async fn list_invoices(
     debug!("Getting invoices list for entrepreneur ID {}", ent_id);
 
     with_ok(ctx.dao.get_invoices(ent_id.into_inner()), |rows| {
-        HttpResponse::Ok().json::<Vec<dto::Invoice>>(rows.into_iter().map(|r| r.into()).collect())
+        HttpResponse::Ok()
+            .json::<Vec<dto::InvoiceWithAllInfo>>(rows.into_iter().map(|r| r.into()).collect())
     })
     .await
 }
@@ -176,7 +177,7 @@ pub async fn insert_invoice(
             invoice.contact_id,
             invoice.pay_until,
         ),
-        |i| HttpResponse::Ok().json::<dto::Invoice>(i.into()),
+        |i| HttpResponse::Ok().json::<dto::InvoiceWithAllInfo>(i.into()),
     )
     .await
 }

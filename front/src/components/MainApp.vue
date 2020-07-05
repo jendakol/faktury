@@ -23,7 +23,7 @@
             <v-container fluid>
                 <v-row>
                     <v-col cols="12">
-                        <v-row align="top" justify="center">
+                        <v-row justify="center">
                             <transition name="fade">
                                 <router-view/>
                             </transition>
