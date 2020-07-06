@@ -127,12 +127,6 @@ impl From<crate::dao::Invoice> for Invoice {
     }
 }
 
-// impl From<crate::dao::InvoiceWithAllInfo> for InvoiceWithAllInfo {
-//     fn from(i: crate::dao::InvoiceWithAllInfo) -> Self {
-//         frunk::labelled_convert_from(i)
-//     }
-// }
-
 impl From<crate::dao::InvoiceWithAllInfo> for InvoiceWithAllInfo {
     fn from(i: crate::dao::InvoiceWithAllInfo) -> Self {
         let (invoice, price_sum, contact_name) = i;
@@ -141,15 +135,6 @@ impl From<crate::dao::InvoiceWithAllInfo> for InvoiceWithAllInfo {
         frunk::from_generic(inv_repr)
     }
 }
-//
-// impl From<crate::dao::InvoiceWithPrice> for Invoice {
-//     fn from(i: crate::dao::InvoiceWithPrice) -> Self {
-//         let (invoice, price_sum) = i;
-//         let inv_repr = frunk::into_generic(invoice);
-//         let inv_repr = inv_repr + hlist![Some(price_sum)];
-//         frunk::from_generic(inv_repr)
-//     }
-// }
 
 impl From<crate::dao::InvoiceRow> for InvoiceRow {
     fn from(i: crate::dao::InvoiceRow) -> Self {
