@@ -21,7 +21,6 @@
             LoginForm
         },
         mounted() {
-            this.$store.commit('login', 1) // TODO support login
         },
         data() {
             return {

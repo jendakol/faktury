@@ -10,6 +10,9 @@ let GlobalFunctions = {
         }
     },
     methods: {
+        getUserId: function() {
+          return this.$store.getters.loggedUserId;
+        },
         ajax(name, data, timeout) {
             return axios.post(this.hostUrl + "/data-" + name, data, {timeout: timeout === undefined ? 5000 : timeout})
                 .then(t => {

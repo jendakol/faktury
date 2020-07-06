@@ -1,17 +1,17 @@
 <template>
-    <v-card width="1000" outlined raised>
-        <v-card-title>
-            Your recent invoices
-        </v-card-title>
+        <v-card width="1000" outlined raised>
+                <v-card-title>
+                        Your invoices
+                </v-card-title>
         <InvoicesTable/>
-    </v-card>
+        </v-card>
 </template>
 
 <script>
     import InvoicesTable from "./dashboard/InvoicesTable";
 
     export default {
-        name: 'Dashboard',
+        name: 'Invoices',
         components: {
             InvoicesTable
         },

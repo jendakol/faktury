@@ -5,8 +5,14 @@ Vue.use(Vuex)
 
 const StateStore = new Vuex.Store({
     state: {
-        loggedUserId: 0,
+        loggedUserId: 1, // TODO support login
         locale: "cs-CZ"
+    },
+    getters: {
+        loggedUserId: function(state) {
+            console.log("Getting user id: " + state.loggedUserId)
+            return state.loggedUserId
+        }
     },
     mutations: {
         login(state, id) {

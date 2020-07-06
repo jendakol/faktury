@@ -46,6 +46,12 @@
                         title: 'Dashboard', icon: 'mdi-view-dashboard', link: {name: 'Dashboard'}
                     },
                     {
+                        title: 'Invoices', icon: 'mdi-text-box-multiple', link: {name: 'Invoices'}
+                    },
+                    {
+                        title: 'Contacts', icon: 'mdi-account-multiple', link: {name: 'Contacts'}
+                    },
+                    {
                         title: 'Settings', icon: 'mdi-account-cog', link: {name: 'UserSettings'}
                     }
                 ],

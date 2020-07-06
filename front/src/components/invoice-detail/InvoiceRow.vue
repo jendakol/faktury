@@ -41,7 +41,7 @@
 
 <script>
 
-    import {SnotifyPosition, SnotifyStyle} from 'vue-snotify';
+    import {SnotifyPosition} from 'vue-snotify';
 
     // TODO support enter-confirmation
 
@@ -104,7 +104,9 @@
         },
         methods: {
             saveRow: function (id) {
-                console.log("Save: " + id)
+                // TODO validation
+                console.log("Save invoice row: ")
+                console.log(this.data)
 
                 this.asyncActionWithNotification("update/invoice-row", this.data, "Saving", (resp) => new Promise((success, error) => {
                         if (resp.success) {
@@ -119,13 +121,14 @@
             deleteRow: function (id) {
                 this.$snotify.confirm('Really delete whole row?', 'Delete', {
                     timeout: 5000,
-                    type: SnotifyStyle.warning,
                     closeOnClick: false,
                     pauseOnHover: true,
                     position: SnotifyPosition.centerCenter,
                     buttons: [
                         {
                             text: 'Yes', action: (toast) => {
+                                console.log("Deleting invoice row " + id)
+
                                 this.ajax("delete/invoice-row/" + id, {}, 1000).then(r => {
                                     if (r.success) {
                                         this.$emit("row-deleted", id)
