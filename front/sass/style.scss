@@ -1,1 +1,19 @@
 @import "~vue-snotify/styles/material";
+
+.faktury-page-header {
+  font-size: 1.6em !important;
+  font-weight: bold;
+}
+
+.vdatetime-input {
+  color: white;
+  cursor: pointer;
+}
+
+.vdatetime-overlay {
+  background-color: rgba(33, 33, 33, 0.9) !important;
+}
+
+.v-text-field__prefix {
+  padding-right: 16px !important;
+}

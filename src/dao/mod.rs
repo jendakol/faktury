@@ -3,7 +3,7 @@ use std::future::Future;
 use std::ops::Deref;
 use std::sync::{Arc, Mutex};
 
-use chrono::NaiveDateTime as Datetime;
+use chrono::NaiveDate as Date;
 use diesel::mysql::MysqlConnection;
 use diesel::prelude::*;
 use diesel::{delete, insert_into, select};
@@ -267,7 +267,7 @@ impl Dao {
         code: &str,
         ent_id: u32,
         cont_id: u32,
-        pay_until: Datetime,
+        pay_until: Date,
     ) -> DaoResult<InvoiceWithAllInfo> {
         let id = self
             .with_connection(|conn| {

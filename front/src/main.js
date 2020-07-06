@@ -1,10 +1,11 @@
 import Vue from 'vue'
 import App from './App.vue'
-import vuetify from './plugins/vuetify'
+import '../sass/style.scss';
 
 Vue.config.productionTip = false
 
-import '../sass/style.scss';
+import vuetify from './plugins/vuetify'
+import 'vuetify/dist/vuetify.min.css'
 
 import VuetifyConfirm from 'vuetify-confirm'
 Vue.use(VuetifyConfirm, {vuetify})
@@ -21,14 +22,13 @@ Vue.use(Snotify, {
 })
 
 import Datetime from 'vue-datetime'
+import 'vue-datetime/dist/vue-datetime.css'
 Vue.use(Datetime);
 
 import VueLodash from 'vue-lodash'
 import lodash from 'lodash'
 Vue.use(VueLodash, { lodash })
 
-import 'vue-datetime/dist/vue-datetime.css'
-import 'vuetify/dist/vuetify.min.css'
 
 import VueRouter from 'vue-router'
 Vue.use(VueRouter)

@@ -1,10 +1,10 @@
 <template>
-        <v-card width="1000" outlined raised>
-                <v-card-title>
-                        Your invoices
-                </v-card-title>
+    <v-card width="1000" outlined raised>
+        <v-card-title>
+            <h1 class="faktury-page-header">Your invoices</h1>
+        </v-card-title>
         <InvoicesTable/>
-        </v-card>
+    </v-card>
 </template>
 
 <script>

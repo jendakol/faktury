@@ -1,3 +1,4 @@
+use chrono::NaiveDate as Date;
 use chrono::NaiveDateTime as Datetime;
 use frunk::*;
 use serde::{Deserialize, Serialize};
@@ -29,9 +30,9 @@ pub struct Invoice {
     pub entrepreneur_id: i32,
     pub contact_id: i32,
     pub created: Datetime,
-    pub pay_until: Datetime,
+    pub pay_until: Date,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub payed: Option<Datetime>,
+    pub payed: Option<Date>,
 }
 
 #[derive(Serialize, Deserialize, LabelledGeneric, Generic, Debug, Clone)]
@@ -42,9 +43,9 @@ pub struct InvoiceWithAllInfo {
     pub entrepreneur_id: i32,
     pub contact_id: i32,
     pub created: Datetime,
-    pub pay_until: Datetime,
+    pub pay_until: Date,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub payed: Option<Datetime>,
+    pub payed: Option<Date>,
     pub price_sum: f64,
     pub contact_name: String,
 }
@@ -92,8 +93,8 @@ pub struct NewInvoice {
     pub entrepreneur_id: u32,
     pub contact_id: u32,
     pub created: Datetime,
-    pub pay_until: Datetime,
-    pub payed: Option<Datetime>,
+    pub pay_until: Date,
+    pub payed: Option<Date>,
 }
 
 #[derive(Deserialize, Debug)]

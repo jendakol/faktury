@@ -24,8 +24,8 @@ table! {
         entrepreneur_id -> Integer,
         contact_id -> Integer,
         created -> Datetime,
-        pay_until -> Datetime,
-        payed -> Nullable<Datetime>,
+        pay_until -> Date,
+        payed -> Nullable<Date>,
     }
 }
 

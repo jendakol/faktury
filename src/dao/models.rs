@@ -1,3 +1,4 @@
+use chrono::NaiveDate as Date;
 use chrono::NaiveDateTime as Datetime;
 use frunk::{Generic, LabelledGeneric};
 
@@ -60,8 +61,8 @@ pub struct Invoice {
     pub entrepreneur_id: i32,
     pub contact_id: i32,
     pub created: Datetime,
-    pub pay_until: Datetime,
-    pub payed: Option<Datetime>,
+    pub pay_until: Date,
+    pub payed: Option<Date>,
 }
 
 #[derive(Debug, Insertable)]
@@ -71,8 +72,8 @@ pub struct NewInvoice {
     pub entrepreneur_id: i32,
     pub contact_id: i32,
     pub created: Datetime,
-    pub pay_until: Datetime,
-    pub payed: Option<Datetime>,
+    pub pay_until: Date,
+    pub payed: Option<Date>,
 }
 
 #[derive(

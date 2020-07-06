@@ -19,22 +19,12 @@
                     :rules="rules.count"/>
         </v-col>
         <v-col cols="1">
-            <v-tooltip top>
-                <template v-slot:activator="{ on, attrs }">
-                    <v-btn icon v-bind="attrs" v-on="on" @click="saveRow(data.id)">
-                        <v-icon color="green lighten-1">mdi-content-save</v-icon>
-                    </v-btn>
-                </template>
-                <span>Save row</span>
-            </v-tooltip>
-            <v-tooltip top>
-                <template v-slot:activator="{ on, attrs }">
-                    <v-btn icon v-bind="attrs" v-on="on" @click="deleteRow(data.id)">
-                        <v-icon color="red lighten-1">mdi-delete</v-icon>
-                    </v-btn>
-                </template>
-                <span>Delete row</span>
-            </v-tooltip>
+            <v-btn text color="green lighten-1" @click="saveRow(data.id)">
+                Save
+            </v-btn>
+            <v-btn text color="red lighten-1" @click="deleteRow(data.id)">
+                Delete
+            </v-btn>
         </v-col>
     </v-row>
 </template>

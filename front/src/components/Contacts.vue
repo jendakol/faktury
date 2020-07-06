@@ -1,7 +1,7 @@
 <template>
     <v-card width="1000" outlined raised :loading="loading">
         <v-card-title>
-            Your contacts
+            <h1 class="faktury-page-header">Your contacts</h1>
         </v-card-title>
         <v-text-field
                 v-model="search"
@@ -73,7 +73,6 @@
     </v-card>
 </template>
 
-
 <style scoped lang="scss">
     .contact-row {
         font-size: large;
@@ -93,6 +92,7 @@
     .col-addr {
     }
 </style>
+
 <script>
     import {SnotifyPosition} from "vue-snotify";
 
