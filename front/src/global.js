@@ -13,6 +13,9 @@ let GlobalFunctions = {
         getUserId: function() {
           return this.$store.getters.loggedUserId;
         },
+        getEntrepreneurId: function() {
+          return this.$store.getters.entrepreneurId;
+        },
         ajax(name, data, timeout) {
             return axios.post(this.hostUrl + "/data-" + name, data, {timeout: timeout === undefined ? 5000 : timeout})
                 .then(t => {

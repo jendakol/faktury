@@ -157,6 +157,11 @@
                 this.invoiceData.contactId = contact.id
             },
             saveMetadata: function () {
+                // fix date formats:
+                this.invoiceData.created = this.invoiceData.created.substring(0, 19)
+                this.invoiceData.payUntil = this.invoiceData.payUntil.substring(0, 10)
+                this.invoiceData.payed = this.invoiceData.payed != null? this.invoiceData.payed.substring(0, 10): null
+
                 console.log("Saving invoice metadata")
                 console.log(this.invoiceData)
 

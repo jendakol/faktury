@@ -22,6 +22,7 @@ use crate::pdf::PdfManager;
 mod config;
 mod dao;
 mod handlers;
+mod logic;
 mod pdf;
 
 pub struct RequestContext {

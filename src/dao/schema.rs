@@ -1,8 +1,17 @@
 table! {
+    accounts (id) {
+        id -> Integer,
+        username -> Varchar,
+        password -> Varchar,
+        settings -> Text,
+    }
+}
+
+table! {
     contacts (id) {
         id -> Integer,
-        code -> Varchar,
         entrepreneur_id -> Integer,
+        code -> Nullable<Varchar>,
         name -> Varchar,
         address -> Varchar,
     }
@@ -11,6 +20,7 @@ table! {
 table! {
     entrepreneurs (id) {
         id -> Integer,
+        account_id -> Integer,
         code -> Varchar,
         name -> Varchar,
         address -> Varchar,
@@ -20,9 +30,9 @@ table! {
 table! {
     invoices (id) {
         id -> Integer,
-        code -> Varchar,
         entrepreneur_id -> Integer,
         contact_id -> Integer,
+        code -> Varchar,
         created -> Datetime,
         pay_until -> Date,
         payed -> Nullable<Date>,
@@ -40,8 +50,9 @@ table! {
 }
 
 joinable!(contacts -> entrepreneurs (entrepreneur_id));
+joinable!(entrepreneurs -> accounts (account_id));
 joinable!(invoice_rows -> invoices (invoice_id));
 joinable!(invoices -> contacts (contact_id));
 joinable!(invoices -> entrepreneurs (entrepreneur_id));
 
-allow_tables_to_appear_in_same_query!(contacts, entrepreneurs, invoices, invoice_rows,);
+allow_tables_to_appear_in_same_query!(accounts, contacts, entrepreneurs, invoices, invoice_rows,);

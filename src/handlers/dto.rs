@@ -5,10 +5,18 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, LabelledGeneric, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
+pub struct Account {
+    pub id: i32,
+    pub username: String,
+    pub settings: String,
+}
+
+#[derive(Serialize, Deserialize, LabelledGeneric, Debug, Clone)]
+#[serde(rename_all = "camelCase")]
 pub struct Contact {
     pub id: i32,
-    pub code: String,
     pub entrepreneur_id: i32,
+    pub code: Option<String>,
     pub name: String,
     pub address: String,
 }
@@ -17,6 +25,7 @@ pub struct Contact {
 #[serde(rename_all = "camelCase")]
 pub struct Entrepreneur {
     pub id: i32,
+    pub account_id: i32,
     pub code: String,
     pub name: String,
     pub address: String,
@@ -26,12 +35,12 @@ pub struct Entrepreneur {
 #[serde(rename_all = "camelCase")]
 pub struct Invoice {
     pub id: i32,
-    pub code: String,
     pub entrepreneur_id: i32,
     pub contact_id: i32,
+    pub code: String,
     pub created: Datetime,
     pub pay_until: Date,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub payed: Option<Date>,
 }
 
@@ -39,12 +48,12 @@ pub struct Invoice {
 #[serde(rename_all = "camelCase")]
 pub struct InvoiceWithAllInfo {
     pub id: i32,
-    pub code: String,
     pub entrepreneur_id: i32,
     pub contact_id: i32,
+    pub code: String,
     pub created: Datetime,
     pub pay_until: Date,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub payed: Option<Date>,
     pub price_sum: f64,
     pub contact_name: String,
@@ -89,12 +98,9 @@ pub struct NewEntrepreneur {
 #[derive(Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct NewInvoice {
-    pub code: String,
+    pub account_id: u32,
     pub entrepreneur_id: u32,
     pub contact_id: u32,
-    pub created: Datetime,
-    pub pay_until: Date,
-    pub payed: Option<Date>,
 }
 
 #[derive(Deserialize, Debug)]

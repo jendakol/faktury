@@ -3,7 +3,8 @@ use std::future::Future;
 use std::ops::Deref;
 use std::sync::{Arc, Mutex};
 
-use chrono::NaiveDate as Date;
+use chrono::{Duration, NaiveDateTime as DateTime};
+use diesel::dsl::max;
 use diesel::mysql::MysqlConnection;
 use diesel::prelude::*;
 use diesel::{delete, insert_into, select};
@@ -13,7 +14,8 @@ use err_context::AnyError;
 use log::{debug, warn};
 
 use crate::config::DbConfig;
-pub use crate::dao::models::{Contact, Entrepreneur, Invoice, InvoiceRow};
+use crate::dao::models::NewInvoice;
+pub use crate::dao::models::{Account, Contact, Entrepreneur, Invoice, InvoiceRow};
 
 mod models;
 mod schema;
@@ -69,6 +71,19 @@ no_arg_sql_function!(last_insert_id, sql_types::Integer);
 impl Dao {
     // *** GET SINGLE:
 
+    pub async fn get_account(&self, id: u32) -> DaoResult<Option<Account>> {
+        use schema::accounts::dsl as table;
+
+        self.with_connection(|conn| {
+            table::accounts
+                .filter(table::id.eq(id as i32))
+                .first(conn)
+                .optional()
+        })
+        .await
+        .map_err(Self::map_db_error)
+    }
+
     pub async fn get_entrepreneur(&self, id: u32) -> DaoResult<Option<Entrepreneur>> {
         use schema::entrepreneurs::dsl as table;
 
@@ -89,7 +104,7 @@ impl Dao {
             invoices::table
                 .select((
                     invoices::all_columns,
-                    diesel::dsl::sql::<diesel::sql_types::Double>("(select sum(invoice_rows.item_price) from invoice_rows where invoice_rows.invoice_id=invoices.id)"),
+                    diesel::dsl::sql::<diesel::sql_types::Double>("ifnull((select sum(invoice_rows.item_price) from invoice_rows where invoice_rows.invoice_id=invoices.id), 0)"),
                     diesel::dsl::sql::<diesel::sql_types::VarChar>("(select contacts.name from contacts where contacts.id=invoices.contact_id)"),
                 ))
                 .filter(invoices::id.eq(id as i32))
@@ -180,7 +195,7 @@ impl Dao {
                 .select((
                     invoices::all_columns,
                     // This is not exactly nice and type-safe piece of code. However, I'm unable to convince Diesel to create it by his own - I just don't know how. 
-                    diesel::dsl::sql::<diesel::sql_types::Double>("(select sum(invoice_rows.item_price) from invoice_rows where invoice_rows.invoice_id=invoices.id)"),
+                    diesel::dsl::sql::<diesel::sql_types::Double>("ifnull((select sum(invoice_rows.item_price) from invoice_rows where invoice_rows.invoice_id=invoices.id), 0)"),
                     diesel::dsl::sql::<diesel::sql_types::VarChar>("(select contacts.name from contacts where contacts.id=invoices.contact_id)"),
                 ))
                 .filter(invoices::entrepreneur_id.eq(entrepreneur_id as i32))
@@ -265,21 +280,32 @@ impl Dao {
     pub async fn insert_invoice(
         &self,
         code: &str,
-        ent_id: u32,
-        cont_id: u32,
-        pay_until: Date,
+        entrepreneur_id: u32,
+        contact_id: u32,
+        due_length: &Duration,
     ) -> DaoResult<InvoiceWithAllInfo> {
         let id = self
             .with_connection(|conn| {
                 use schema::invoices::dsl as table;
 
+                let now: DateTime = select(diesel::dsl::now).get_result::<DateTime>(conn)?;
+
+                let pay_until = now + *due_length;
+                let pay_until = pay_until.date();
+
+                let invoice = NewInvoice {
+                    entrepreneur_id: entrepreneur_id as i32,
+                    contact_id: contact_id as i32,
+                    code,
+                    created: now,
+                    pay_until,
+                    payed: None,
+                };
+
+                debug!("Inserting new invoice: {:?}", invoice);
+
                 insert_into(table::invoices)
-                    .values((
-                        table::code.eq(code),
-                        table::entrepreneur_id.eq(ent_id as i32),
-                        table::contact_id.eq(cont_id as i32),
-                        table::pay_until.eq(pay_until),
-                    ))
+                    .values(invoice)
                     .execute(conn)
                     .map_err(Self::map_db_error)
                     .and_then(|r| Self::get_new_id(conn, r))
@@ -440,6 +466,24 @@ impl Dao {
         .await?; // it's already mapped to DB error
 
         Ok(())
+    }
+
+    // *** OTHERS:
+
+    pub async fn get_invoices_max_id(&self, ent_id: u32) -> DaoResult<i32> {
+        self.with_connection(|conn| {
+            use schema::*;
+
+            invoices::table
+                .select(max(invoices::id))
+                .filter(invoices::entrepreneur_id.eq(ent_id as i32))
+                .first::<Option<i32>>(conn)
+                .map_err(Self::map_db_error)
+                .and_then(|r| {
+                    r.ok_or_else(|| AnyError::from("Must never happen - it always has a value"))
+                })
+        })
+        .await
     }
 
     // *** HELPER METHODS:

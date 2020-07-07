@@ -1,5 +1,5 @@
 <template>
-    <v-card outlined raised class="pa-3 dialog-contact-box">
+    <v-card outlined raised class="pa-3 dialog-contact-box" height="150">
         {{name}}<br/>
         {{code}}<br/>
         <div style="white-space: pre-line;">{{address}}</div>

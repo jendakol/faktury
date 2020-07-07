@@ -99,7 +99,7 @@
     export default {
         name: 'Contacts',
         mounted() {
-            this.ajax('get/contacts/' + this.getUserId(), {}, 1000).then(data => {
+            this.ajax('get/contacts/' + this.getEntrepreneurId(), {}, 1000).then(data => {
                 this.contacts = data;
                 this.loading = false;
                 this.filterData()
@@ -155,7 +155,7 @@
                     code: this.newDialog.code,
                     name: this.newDialog.name,
                     address: this.newDialog.address,
-                    entrepreneurId: this.getUserId()
+                    entrepreneurId: this.getEntrepreneurId()
                 };
 
                 console.log("Adding new contact: ")

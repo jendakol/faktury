@@ -813,6 +813,7 @@ dependencies = [
  "actix-files",
  "actix-rt",
  "actix-web",
+ "async-trait",
  "chrono",
  "config",
  "diesel",
@@ -828,6 +829,7 @@ dependencies = [
  "printpdf",
  "qrcode-generator",
  "serde 1.0.112",
+ "serde_json",
 ]
 
 [[package]]

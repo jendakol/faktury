@@ -7,8 +7,28 @@ use super::schema::*;
 #[derive(
     Identifiable, Queryable, Associations, AsChangeset, LabelledGeneric, PartialEq, Debug, Clone,
 )]
+pub struct Account {
+    pub id: i32,
+    pub username: String,
+    pub password: String,
+    pub settings: String,
+}
+
+#[derive(Debug, Insertable)]
+#[table_name = "accounts"]
+pub struct NewAccount<'a> {
+    pub username: &'a str,
+    pub password: &'a str,
+    pub settings: &'a str,
+}
+
+#[derive(
+    Identifiable, Queryable, Associations, AsChangeset, LabelledGeneric, PartialEq, Debug, Clone,
+)]
+#[belongs_to(Account)]
 pub struct Entrepreneur {
     pub id: i32,
+    pub account_id: i32,
     pub code: String,
     pub name: String,
     pub address: String,
@@ -28,8 +48,8 @@ pub struct NewEntrepreneur<'a> {
 #[belongs_to(Entrepreneur)]
 pub struct Contact {
     pub id: i32,
-    pub code: String,
     pub entrepreneur_id: i32,
+    pub code: Option<String>,
     pub name: String,
     pub address: String,
 }
@@ -37,8 +57,8 @@ pub struct Contact {
 #[derive(Debug, Insertable)]
 #[table_name = "contacts"]
 pub struct NewContact<'a> {
-    pub code: &'a str,
     pub entrepreneur_id: i32,
+    pub code: Option<&'a str>,
     pub name: &'a str,
     pub address: &'a str,
 }
@@ -57,9 +77,9 @@ pub struct NewContact<'a> {
 #[belongs_to(Entrepreneur)]
 pub struct Invoice {
     pub id: i32,
-    pub code: String,
     pub entrepreneur_id: i32,
     pub contact_id: i32,
+    pub code: String,
     pub created: Datetime,
     pub pay_until: Date,
     pub payed: Option<Date>,
@@ -67,10 +87,10 @@ pub struct Invoice {
 
 #[derive(Debug, Insertable)]
 #[table_name = "invoices"]
-pub struct NewInvoice {
-    pub code: String,
+pub struct NewInvoice<'a> {
     pub entrepreneur_id: i32,
     pub contact_id: i32,
+    pub code: &'a str,
     pub created: Datetime,
     pub pay_until: Date,
     pub payed: Option<Date>,
