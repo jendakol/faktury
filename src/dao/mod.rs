@@ -195,7 +195,7 @@ impl Dao {
                 .select((
                     invoices::all_columns,
                     // This is not exactly nice and type-safe piece of code. However, I'm unable to convince Diesel to create it by his own - I just don't know how. 
-                    diesel::dsl::sql::<diesel::sql_types::Double>("ifnull((select sum(invoice_rows.item_price) from invoice_rows where invoice_rows.invoice_id=invoices.id), 0)"),
+                    diesel::dsl::sql::<diesel::sql_types::Double>("ifnull((select sum(invoice_rows.item_price * invoice_rows.item_count) from invoice_rows where invoice_rows.invoice_id=invoices.id), 0)"),
                     diesel::dsl::sql::<diesel::sql_types::VarChar>("(select contacts.name from contacts where contacts.id=invoices.contact_id)"),
                 ))
                 .filter(invoices::entrepreneur_id.eq(entrepreneur_id as i32))
