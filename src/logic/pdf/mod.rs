@@ -12,6 +12,9 @@ use log::debug;
 use printpdf::*;
 use qrcode_generator::QrCodeEcc;
 
+use crate::dao::{Contact, Entrepreneur, Invoice, InvoiceRow};
+use crate::logic::settings::AccountSettings;
+
 #[derive(Debug, Clone)]
 pub struct PdfManager {
     fonts: Arc<HashMap<String, String>>,
@@ -26,7 +29,14 @@ impl PdfManager {
         Ok(PdfManager { fonts })
     }
 
-    pub fn create(&self, contact_name: String) -> impl futures::Stream<Item = Result<Bytes, ()>> {
+    pub fn create(
+        &self,
+        settings: AccountSettings,
+        entrepreneur: Entrepreneur,
+        contact: Contact,
+        invoice: Invoice,
+        invoice_rows: Vec<InvoiceRow>,
+    ) -> impl futures::Stream<Item = Result<Bytes, ()>> {
         let (tx, rx) = mpsc::channel::<Vec<u8>>(1024);
         let w = BlockingWriter(tx);
 
@@ -34,7 +44,9 @@ impl PdfManager {
 
         thread::spawn(move || {
             let creator = PdfCreator::from(fonts);
-            let doc = creator.create(&contact_name).unwrap();
+            let doc = creator
+                .create(settings, entrepreneur, contact, invoice, invoice_rows)
+                .unwrap();
 
             // TODO how to handle errors? :-(
             if let Err(e) = doc.save(&mut BufWriter::new(w)) {
@@ -75,7 +87,14 @@ impl PdfCreator {
             .map_err(AnyError::from)
     }
 
-    fn create(self, contact_name: &str) -> Result<PdfDocumentReference, AnyError> {
+    fn create(
+        self,
+        _settings: AccountSettings,
+        _entrepreneur: Entrepreneur,
+        contact: Contact,
+        _invoice: Invoice,
+        _invoice_rows: Vec<InvoiceRow>,
+    ) -> Result<PdfDocumentReference, AnyError> {
         let qrcode = qrcode_generator::to_image("Zadek!!!", QrCodeEcc::Low, 512).unwrap();
 
         // TODO doesn't work! let font = doc.add_builtin_font(BuiltinFont::TimesRoman).unwrap();
@@ -83,7 +102,7 @@ impl PdfCreator {
         let font = self.load_font("x360")?;
 
         self.current_layer
-            .use_text(contact_name, 20, Mm(100.0), Mm(100.0), &font);
+            .use_text(contact.name, 20, Mm(100.0), Mm(100.0), &font);
 
         let points1 = vec![
             (Point::new(Mm(20.0), Mm(297.0 - 20.0)), false),

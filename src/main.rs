@@ -17,13 +17,12 @@ use log::{info, trace};
 
 use crate::config::AppConfig;
 use crate::dao::Dao;
-use crate::pdf::PdfManager;
+use crate::logic::pdf::PdfManager;
 
 mod config;
 mod dao;
 mod handlers;
 mod logic;
-mod pdf;
 
 pub struct RequestContext {
     dao: Dao,
@@ -68,6 +67,7 @@ async fn main() {
             }))
             .wrap(Cors::new().supports_credentials().finish()) // TODO limit
             .wrap(middleware::Compress::default())
+            .service(handlers::download_invoice)
             .service(handlers::get_entrepreneur)
             .service(handlers::get_contact)
             .service(handlers::get_invoice)

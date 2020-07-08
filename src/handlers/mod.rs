@@ -10,19 +10,25 @@ use crate::handlers::dto::{
     Contact, Entrepreneur, Invoice, InvoiceRow, InvoiceWithRows, NewContact, NewEntrepreneur,
     NewInvoice, NewInvoiceRow,
 };
+use crate::logic;
 use crate::logic::invoices as InvoicesLogic;
 use crate::logic::settings::AccountSettings;
 use crate::RequestContext;
 
 mod dto;
 
-#[get("/download")]
-pub async fn get(ctx: web::Data<RequestContext>) -> impl Responder {
-    with_found(ctx.dao.get_contact(1), |contact| async {
-        let pdf_stream = ctx.pdf_manager.create(contact.name);
-        HttpResponse::Ok().body(BodyStream::new(pdf_stream))
-    })
-    .await
+#[get("/download/{id}")]
+pub async fn download_invoice(
+    id: web::Path<u32>,
+    ctx: web::Data<RequestContext>,
+) -> impl Responder {
+    match logic::download_invoice(id.into_inner(), &ctx.dao, &ctx.pdf_manager).await {
+        Ok(stream) => HttpResponse::Ok().body(BodyStream::new(stream)),
+        Err(err) => {
+            warn!("Error while downloading invoice PDF: {}", err);
+            HttpResponse::InternalServerError().finish()
+        }
+    }
 }
 
 // TODO security: login and https://docs.rs/csrf/0.4.0/csrf/
