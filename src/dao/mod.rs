@@ -38,12 +38,7 @@ impl TryFrom<DbConfig> for Dao {
     fn try_from(config: DbConfig) -> Result<Self, Self::Error> {
         let database_url = format!(
             "mysql://{}:{}@{}:{}/{}?prefer_socket={}",
-            config.username,
-            config.password,
-            config.host,
-            config.port,
-            config.db_name,
-            config.prefer_socket
+            config.username, config.password, config.host, config.port, config.db_name, config.prefer_socket
         );
 
         // TODO connection pooling?
@@ -74,27 +69,17 @@ impl Dao {
     pub async fn get_account(&self, id: u32) -> DaoResult<Option<Account>> {
         use schema::accounts::dsl as table;
 
-        self.with_connection(|conn| {
-            table::accounts
-                .filter(table::id.eq(id as i32))
-                .first(conn)
-                .optional()
-        })
-        .await
-        .map_err(Self::map_db_error)
+        self.with_connection(|conn| table::accounts.filter(table::id.eq(id as i32)).first(conn).optional())
+            .await
+            .map_err(Self::map_db_error)
     }
 
     pub async fn get_entrepreneur(&self, id: u32) -> DaoResult<Option<Entrepreneur>> {
         use schema::entrepreneurs::dsl as table;
 
-        self.with_connection(|conn| {
-            table::entrepreneurs
-                .filter(table::id.eq(id as i32))
-                .first(conn)
-                .optional()
-        })
-        .await
-        .map_err(Self::map_db_error)
+        self.with_connection(|conn| table::entrepreneurs.filter(table::id.eq(id as i32)).first(conn).optional())
+            .await
+            .map_err(Self::map_db_error)
     }
 
     pub async fn get_invoice(&self, id: u32) -> DaoResult<Option<InvoiceWithAllInfo>> {
@@ -104,21 +89,22 @@ impl Dao {
             invoices::table
                 .select((
                     invoices::all_columns,
-                    diesel::dsl::sql::<diesel::sql_types::Double>("ifnull((select sum(invoice_rows.item_price) from invoice_rows where invoice_rows.invoice_id=invoices.id), 0)"),
-                    diesel::dsl::sql::<diesel::sql_types::VarChar>("(select contacts.name from contacts where contacts.id=invoices.contact_id)"),
+                    diesel::dsl::sql::<diesel::sql_types::Double>(
+                        "ifnull((select sum(invoice_rows.item_price) from invoice_rows where invoice_rows.invoice_id=invoices.id), 0)",
+                    ),
+                    diesel::dsl::sql::<diesel::sql_types::VarChar>(
+                        "(select contacts.name from contacts where contacts.id=invoices.contact_id)",
+                    ),
                 ))
                 .filter(invoices::id.eq(id as i32))
                 .first(conn)
                 .optional()
         })
-            .await
-            .map_err(Self::map_db_error)
+        .await
+        .map_err(Self::map_db_error)
     }
 
-    pub async fn get_invoice_with_rows(
-        &self,
-        id: u32,
-    ) -> DaoResult<Option<(Invoice, Vec<InvoiceRow>)>> {
+    pub async fn get_invoice_with_rows(&self, id: u32) -> DaoResult<Option<(Invoice, Vec<InvoiceRow>)>> {
         use schema::*;
 
         let results: Vec<(Invoice, Option<InvoiceRow>)> = self
@@ -150,27 +136,17 @@ impl Dao {
     pub async fn get_invoice_row(&self, id: u32) -> DaoResult<Option<InvoiceRow>> {
         use schema::invoice_rows::dsl as table;
 
-        self.with_connection(|conn| {
-            table::invoice_rows
-                .filter(table::id.eq(id as i32))
-                .first(conn)
-                .optional()
-        })
-        .await
-        .map_err(Self::map_db_error)
+        self.with_connection(|conn| table::invoice_rows.filter(table::id.eq(id as i32)).first(conn).optional())
+            .await
+            .map_err(Self::map_db_error)
     }
 
     pub async fn get_contact(&self, id: u32) -> DaoResult<Option<Contact>> {
         use schema::contacts::dsl as table;
 
-        self.with_connection(|conn| {
-            table::contacts
-                .filter(table::id.eq(id as i32))
-                .first(conn)
-                .optional()
-        })
-        .await
-        .map_err(Self::map_db_error)
+        self.with_connection(|conn| table::contacts.filter(table::id.eq(id as i32)).first(conn).optional())
+            .await
+            .map_err(Self::map_db_error)
     }
 
     // *** GET LIST:
@@ -178,13 +154,9 @@ impl Dao {
     pub async fn get_contacts(&self, entrepreneur_id: u32) -> DaoResult<Vec<Contact>> {
         use schema::contacts::dsl as table;
 
-        self.with_connection(|conn| {
-            table::contacts
-                .filter(table::entrepreneur_id.eq(entrepreneur_id as i32))
-                .load(conn)
-        })
-        .await
-        .map_err(Self::map_db_error)
+        self.with_connection(|conn| table::contacts.filter(table::entrepreneur_id.eq(entrepreneur_id as i32)).load(conn))
+            .await
+            .map_err(Self::map_db_error)
     }
 
     pub async fn get_invoices(&self, entrepreneur_id: u32) -> DaoResult<Vec<InvoiceWithAllInfo>> {
@@ -208,33 +180,20 @@ impl Dao {
     pub async fn get_invoice_rows(&self, invoice_id: u32) -> DaoResult<Vec<InvoiceRow>> {
         use schema::invoice_rows::dsl as table;
 
-        self.with_connection(|conn| {
-            table::invoice_rows
-                .filter(table::invoice_id.eq(invoice_id as i32))
-                .load(conn)
-        })
-        .await
-        .map_err(Self::map_db_error)
+        self.with_connection(|conn| table::invoice_rows.filter(table::invoice_id.eq(invoice_id as i32)).load(conn))
+            .await
+            .map_err(Self::map_db_error)
     }
 
     // *** INSERT:
 
-    pub async fn insert_entrepreneur(
-        &self,
-        code: &str,
-        name: &str,
-        addr: &str,
-    ) -> DaoResult<Entrepreneur> {
+    pub async fn insert_entrepreneur(&self, code: &str, name: &str, addr: &str) -> DaoResult<Entrepreneur> {
         let id = self
             .with_connection(|conn| {
                 use schema::entrepreneurs::dsl as table;
 
                 insert_into(table::entrepreneurs)
-                    .values((
-                        table::code.eq(code),
-                        table::name.eq(name),
-                        table::address.eq(addr),
-                    ))
+                    .values((table::code.eq(code), table::name.eq(name), table::address.eq(addr)))
                     .execute(conn)
                     .map_err(Self::map_db_error)
                     .and_then(|r| Self::get_new_id(conn, r))
@@ -247,13 +206,7 @@ impl Dao {
             .expect("Must find newly inserted entrepreneur!"))
     }
 
-    pub async fn insert_contact(
-        &self,
-        ent_id: u32,
-        code: &str,
-        name: &str,
-        addr: &str,
-    ) -> DaoResult<Contact> {
+    pub async fn insert_contact(&self, ent_id: u32, code: &str, name: &str, addr: &str) -> DaoResult<Contact> {
         let id = self
             .with_connection(|conn| {
                 use schema::contacts::dsl as table;
@@ -271,10 +224,7 @@ impl Dao {
             })
             .await?; // it's already mapped to DB error
 
-        Ok(self
-            .get_contact(id as u32)
-            .await?
-            .expect("Must find newly inserted contact!"))
+        Ok(self.get_contact(id as u32).await?.expect("Must find newly inserted contact!"))
     }
 
     pub async fn insert_invoice(
@@ -312,19 +262,10 @@ impl Dao {
             })
             .await?; // it's already mapped to DB error
 
-        Ok(self
-            .get_invoice(id as u32)
-            .await?
-            .expect("Must find newly inserted invoice!"))
+        Ok(self.get_invoice(id as u32).await?.expect("Must find newly inserted invoice!"))
     }
 
-    pub async fn insert_invoice_row(
-        &self,
-        invoice_id: u32,
-        name: &str,
-        price: f32,
-        count: u8,
-    ) -> DaoResult<InvoiceRow> {
+    pub async fn insert_invoice_row(&self, invoice_id: u32, name: &str, price: f32, count: u8) -> DaoResult<InvoiceRow> {
         let id = self
             .with_connection(|conn| {
                 use schema::invoice_rows::dsl as table;
@@ -479,9 +420,7 @@ impl Dao {
                 .filter(invoices::entrepreneur_id.eq(ent_id as i32))
                 .first::<Option<i32>>(conn)
                 .map_err(Self::map_db_error)
-                .and_then(|r| {
-                    r.ok_or_else(|| AnyError::from("Must never happen - it always has a value"))
-                })
+                .map(|r| r.unwrap_or(0)) // no at all, default to 0
         })
         .await
     }
@@ -514,9 +453,7 @@ impl Dao {
     }
 
     fn last_inserted_id(conn: &MysqlConnection) -> DaoResult<i32> {
-        select(last_insert_id)
-            .first(conn)
-            .map_err(Self::map_db_error)
+        select(last_insert_id).first(conn).map_err(Self::map_db_error)
     }
 
     fn map_db_error(err: diesel::result::Error) -> AnyError {

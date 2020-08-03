@@ -4,7 +4,7 @@ use err_context::AnyError;
 use pdf::PdfManager;
 use settings::AccountSettings;
 
-use crate::dao::Dao;
+use crate::dao::{Dao, Invoice};
 
 pub mod invoices;
 pub mod pdf;
@@ -14,7 +14,7 @@ pub async fn download_invoice(
     id: u32,
     dao: &Dao,
     pdf_manager: &PdfManager,
-) -> Result<impl futures::Stream<Item = Result<Bytes, ()>>, AnyError> {
+) -> Result<(Invoice, impl futures::Stream<Item = Result<Bytes, ()>>), AnyError> {
     let (invoice, rows) = match dao.get_invoice_with_rows(id).await? {
         Some(iwr) => iwr,
         None => return Err(AnyError::from("Could not find requested invoice")),
@@ -30,12 +30,12 @@ pub async fn download_invoice(
         .await?
         .expect("This value must exist!");
 
-    let contact = dao
-        .get_contact(invoice.contact_id as u32)
-        .await?
-        .expect("This value must exist!");
+    let contact = dao.get_contact(invoice.contact_id as u32).await?.expect("This value must exist!");
 
     let account_settings = AccountSettings::from(&account);
 
-    Ok(pdf_manager.create(account_settings, entrepreneur, contact, invoice, rows))
+    Ok((
+        invoice.clone(),
+        pdf_manager.create(account_settings, entrepreneur, contact, invoice, rows),
+    ))
 }

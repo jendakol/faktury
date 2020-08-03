@@ -36,7 +36,7 @@
         name: 'ContactDetail',
         components: {},
         mounted() {
-            this.ajax("get/contact/" + this.$route.params.id, {}, 1000).then(r => {
+            this.ajax("get/contact/" + this.$route.params.id, {}).then(r => {
                 this.contactData = r;
                 this.loading = false
             })

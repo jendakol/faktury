@@ -119,7 +119,7 @@
                             text: 'Yes', action: (toast) => {
                                 console.log("Deleting invoice row " + id)
 
-                                this.ajax("delete/invoice-row/" + id, {}, 1000).then(r => {
+                                this.ajax("delete/invoice-row/" + id).then(r => {
                                     if (r.success) {
                                         this.$emit("row-deleted", id)
                                     } else {

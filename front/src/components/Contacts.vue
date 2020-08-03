@@ -99,7 +99,7 @@
     export default {
         name: 'Contacts',
         mounted() {
-            this.ajax('get/contacts/' + this.getEntrepreneurId(), {}, 1000).then(data => {
+            this.ajax('get/contacts/' + this.getEntrepreneurId()).then(data => {
                 this.contacts = data;
                 this.loading = false;
                 this.filterData()
@@ -182,7 +182,7 @@
                             text: 'Yes', action: (toast) => {
                                 console.log("Deleting contact " + id)
 
-                                this.ajax("delete/contact/" + id, {}, 1000).then(r => {
+                                this.ajax("delete/contact/" + id).then(r => {
                                     if (r.success) {
                                         this.$set(this, 'contacts', this.lodash.filter(this.contacts, function (e) {
                                             return e.id !== id
