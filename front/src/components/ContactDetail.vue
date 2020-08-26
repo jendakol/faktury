@@ -49,6 +49,8 @@
         },
         methods: {
             save: function () {
+                this.contactData.address = this.contactData.address.replace("\n","\r\n").replace("\r\r\n","\r\n")
+
                 console.log("Saving contact: ")
                 console.log(this.contactData)
 
