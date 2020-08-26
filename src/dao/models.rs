@@ -4,9 +4,7 @@ use frunk::{Generic, LabelledGeneric};
 
 use super::schema::*;
 
-#[derive(
-    Identifiable, Queryable, Associations, AsChangeset, LabelledGeneric, PartialEq, Debug, Clone,
-)]
+#[derive(Identifiable, Queryable, Associations, AsChangeset, LabelledGeneric, PartialEq, Debug, Clone)]
 pub struct Account {
     pub id: i32,
     pub username: String,
@@ -22,9 +20,7 @@ pub struct NewAccount<'a> {
     pub settings: &'a str,
 }
 
-#[derive(
-    Identifiable, Queryable, Associations, AsChangeset, LabelledGeneric, PartialEq, Debug, Clone,
-)]
+#[derive(Identifiable, Queryable, Associations, AsChangeset, LabelledGeneric, PartialEq, Debug, Clone)]
 #[belongs_to(Account)]
 pub struct Entrepreneur {
     pub id: i32,
@@ -42,9 +38,7 @@ pub struct NewEntrepreneur<'a> {
     pub address: &'a str,
 }
 
-#[derive(
-    Identifiable, Queryable, Associations, AsChangeset, LabelledGeneric, PartialEq, Debug, Clone,
-)]
+#[derive(Identifiable, Queryable, Associations, AsChangeset, LabelledGeneric, PartialEq, Debug, Clone)]
 #[belongs_to(Entrepreneur)]
 pub struct Contact {
     pub id: i32,
@@ -63,17 +57,7 @@ pub struct NewContact<'a> {
     pub address: &'a str,
 }
 
-#[derive(
-    Identifiable,
-    Queryable,
-    Associations,
-    AsChangeset,
-    LabelledGeneric,
-    Generic,
-    PartialEq,
-    Debug,
-    Clone,
-)]
+#[derive(Identifiable, Queryable, Associations, AsChangeset, LabelledGeneric, Generic, PartialEq, Debug, Clone)]
 #[belongs_to(Entrepreneur)]
 pub struct Invoice {
     pub id: i32,
@@ -96,16 +80,14 @@ pub struct NewInvoice<'a> {
     pub payed: Option<Date>,
 }
 
-#[derive(
-    Identifiable, Queryable, Associations, AsChangeset, LabelledGeneric, PartialEq, Debug, Clone,
-)]
+#[derive(Identifiable, Queryable, Associations, AsChangeset, LabelledGeneric, PartialEq, Debug, Clone)]
 #[belongs_to(Invoice)]
 pub struct InvoiceRow {
     pub id: i32,
     pub invoice_id: i32,
     pub item_name: String,
     pub item_price: f32,
-    pub item_count: i8,
+    pub item_count: i16,
 }
 
 #[derive(Debug, Insertable)]
@@ -114,5 +96,5 @@ pub struct NewInvoiceRow {
     pub invoice_id: i32,
     pub item_name: String,
     pub item_price: f32,
-    pub item_count: i8,
+    pub item_count: i16,
 }

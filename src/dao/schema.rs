@@ -45,7 +45,7 @@ table! {
         invoice_id -> Integer,
         item_name -> Varchar,
         item_price -> Float,
-        item_count -> Tinyint,
+        item_count -> SmallInt,
     }
 }
 

@@ -35,6 +35,7 @@
             invoiceId: Number,
         },
         data() {
+            // TODO don't allow to save when rules fail
             return {
                 currency: "Kč",
                 name: null,
@@ -51,7 +52,7 @@
                     }],
                     count: [v => {
                         const pattern = /^\d+$/
-                        return pattern.test(v) || 'Must be a valid count.'
+                        return (pattern.test(v) && parseInt(v) <= 65000) || 'Must be a valid count, less than 65000.'
                     }],
                 },
             }

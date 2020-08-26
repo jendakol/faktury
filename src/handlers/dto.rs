@@ -66,7 +66,7 @@ pub struct InvoiceRow {
     pub invoice_id: i32,
     pub item_name: String,
     pub item_price: f32,
-    pub item_count: i8,
+    pub item_count: i16,
 }
 
 #[derive(Serialize, Debug, Clone)]
@@ -109,7 +109,7 @@ pub struct NewInvoiceRow {
     pub invoice_id: u32,
     pub item_name: String,
     pub item_price: f32,
-    pub item_count: u8,
+    pub item_count: u16,
 }
 
 // ******

@@ -265,7 +265,7 @@ impl Dao {
         Ok(self.get_invoice(id as u32).await?.expect("Must find newly inserted invoice!"))
     }
 
-    pub async fn insert_invoice_row(&self, invoice_id: u32, name: &str, price: f32, count: u8) -> DaoResult<InvoiceRow> {
+    pub async fn insert_invoice_row(&self, invoice_id: u32, name: &str, price: f32, count: u16) -> DaoResult<InvoiceRow> {
         let id = self
             .with_connection(|conn| {
                 use schema::invoice_rows::dsl as table;
@@ -275,7 +275,7 @@ impl Dao {
                         table::invoice_id.eq(invoice_id as i32),
                         table::item_name.eq(name),
                         table::item_price.eq(price),
-                        table::item_count.eq(count as i8),
+                        table::item_count.eq(count as i16),
                     ))
                     .execute(conn)
                     .map_err(Self::map_db_error)
