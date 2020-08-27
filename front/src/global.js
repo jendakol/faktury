@@ -10,11 +10,11 @@ let GlobalFunctions = {
         }
     },
     methods: {
-        getUserId: function() {
-          return this.$store.getters.loggedUserId;
+        getUserId: function () {
+            return this.$store.getters.loggedUserId;
         },
-        getEntrepreneurId: function() {
-          return this.$store.getters.entrepreneurId;
+        getEntrepreneurId: function () {
+            return this.$store.getters.entrepreneurId;
         },
         ajax(name, data, timeout) {
             return axios.post(this.hostUrl + "/data-" + name, data, {timeout: timeout === undefined ? 5000 : timeout})
@@ -69,6 +69,19 @@ let GlobalFunctions = {
                 })
             }));
         },
+        formatVat: function (vatRaw) {
+            switch (vatRaw) {
+                case undefined :
+                    console.log("VAT RAW: " + vatRaw)
+                    return
+                case "DontDisplay":
+                    return ""
+                case "NotTaxPayer":
+                    return "Neplátce DPH" // TODO harcoded lang value
+                default:
+                    return vatRaw.Code
+            }
+        }
     },
 }
 

@@ -69,8 +69,10 @@
                         </v-row>
                         <v-row>
                             <v-col cols="4">
-                                <ContactBox :code="entrepreneurData.code" :name="entrepreneurData.name"
-                                            :address="entrepreneurData.address"/>
+                                <ContactBox :code="entrepreneurData.code"
+                                            :name="entrepreneurData.name"
+                                            :address="entrepreneurData.address"
+                                            :vat="entrepreneurData.vat"/>
                             </v-col>
                             <v-spacer/>
                             <v-tooltip bottom>
@@ -78,7 +80,10 @@
                                     <v-col cols="4" @click="$refs.ContactsDialog.show()" class="invoice-contact-box" v-bind="attrs"
                                            v-on="on">
                                         <ContactsDialog @contact-selected="contactSelected" ref="ContactsDialog"/>
-                                        <ContactBox :code="contactData.code" :name="contactData.name" :address="contactData.address"/>
+                                        <ContactBox :code="contactData.code"
+                                                    :name="contactData.name"
+                                                    :address="contactData.address"
+                                                    :vat="contactData.vat"/>
                                     </v-col>
                                 </template>
                                 <span>Click to change</span>
@@ -131,10 +136,10 @@ export default {
         Datetime
     },
     mounted() {
-        this.ajax("get/invoice-with-rows/" + this.$route.params.id, {}).then(invoice => {
+        this.ajax("get/invoice-with-rows/" + this.$route.params.id).then(invoice => {
             Promise.all([
-                this.ajax("get/contact/" + invoice.invoice.contactId, {}),
-                this.ajax("get/entrepreneur/" + invoice.invoice.entrepreneurId, {}),
+                this.ajax("get/contact/" + invoice.invoice.contactId),
+                this.ajax("get/entrepreneur/" + invoice.invoice.entrepreneurId),
             ]).then(([contact, entrepreneur]) => {
                 this.invoiceData = invoice.invoice
                 this.invoiceRows = invoice.rows

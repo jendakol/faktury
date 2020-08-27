@@ -2,6 +2,8 @@ use chrono::NaiveDate as Date;
 use chrono::NaiveDateTime as Datetime;
 use frunk::{Generic, LabelledGeneric};
 
+use crate::dao::Vat;
+
 use super::schema::*;
 
 #[derive(Identifiable, Queryable, Associations, AsChangeset, LabelledGeneric, PartialEq, Debug, Clone)]
@@ -28,6 +30,12 @@ pub struct Entrepreneur {
     pub code: String,
     pub name: String,
     pub address: String,
+    pub vat: Vat,
+    pub account_number: i64,
+    pub account_bank_code: i16,
+    pub email: Option<String>,
+    pub phone: Option<String>,
+    pub currency_code: String,
 }
 
 #[derive(Debug, Insertable)]
@@ -36,6 +44,12 @@ pub struct NewEntrepreneur<'a> {
     pub code: &'a str,
     pub name: &'a str,
     pub address: &'a str,
+    pub vat: Vat,
+    pub account_number: i64,
+    pub account_bank_code: i16,
+    pub email: Option<String>,
+    pub phone: Option<String>,
+    pub currency_code: String,
 }
 
 #[derive(Identifiable, Queryable, Associations, AsChangeset, LabelledGeneric, PartialEq, Debug, Clone)]
@@ -46,6 +60,7 @@ pub struct Contact {
     pub code: Option<String>,
     pub name: String,
     pub address: String,
+    pub vat: Vat,
 }
 
 #[derive(Debug, Insertable)]
@@ -55,6 +70,7 @@ pub struct NewContact<'a> {
     pub code: Option<&'a str>,
     pub name: &'a str,
     pub address: &'a str,
+    pub vat: Option<Vat>,
 }
 
 #[derive(Identifiable, Queryable, Associations, AsChangeset, LabelledGeneric, Generic, PartialEq, Debug, Clone)]

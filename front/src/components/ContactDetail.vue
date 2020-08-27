@@ -12,6 +12,18 @@
             </v-row>
             <v-row>
                 <v-col>
+                    <v-select
+                        :items="vatSelectItems"
+                        v-model="contactData.vat.type"
+                        label="VAT type"
+                        outlined
+                    ></v-select>
+
+                    <v-text-field v-if="contactData.vat.type === 'Code'" label="VAT code" v-model="contactData.vat.value" counter="100"/>
+                </v-col>
+            </v-row>
+            <v-row>
+                <v-col>
                     <v-textarea label="Address" v-model="contactData.address" counter="250"/>
                 </v-col>
             </v-row>
@@ -23,46 +35,71 @@
     </v-card>
 </template>
 
-<style scoped lang="scss">
-    .contact-name-text {
-        /*font-size: 1.5em;*/
-    }
-</style>
-
 <script>
-    // TODO support enter-confirmation
+// TODO support enter-confirmation
 
-    export default {
-        name: 'ContactDetail',
-        components: {},
-        mounted() {
-            this.ajax("get/contact/" + this.$route.params.id, {}).then(r => {
-                this.contactData = r;
-                this.loading = false
-            })
-        },
-        data() {
-            return {
-                loading: true,
-                contactData: {},
+export default {
+    name: 'ContactDetail',
+    components: {},
+    mounted() {
+        this.ajax("get/contact/" + this.$route.params.id, {}).then(r => {
+            console.log("R: " + JSON.stringify(r));
+            this.contactData = r
+
+            switch (this.contactData.vat) {
+                case "DontDisplay":
+                    this.contactData.vat = {type: "DontDisplay"}
+                    break
+                case "NotTaxPayer":
+                    this.contactData.vat = {type: "NotTaxPayer"}
+                    break
+                default:
+                    this.contactData.vat = {type: "Code", value: this.contactData.vat.Code}
+                    break
             }
-        },
-        methods: {
-            save: function () {
-                this.contactData.address = this.contactData.address.replace("\n","\r\n").replace("\r\r\n","\r\n")
 
-                console.log("Saving contact: ")
-                console.log(this.contactData)
+            this.loading = false
+        })
+    },
+    data() {
+        return {
+            loading: true,
+            contactData: {},
+            vatSelectItems: [
+                {text: "Doesn't have", value: "DontDisplay"},
+                {text: "Not a tax payer", value: "NotTaxPayer"},
+                {text: "Code", value: "Code"},
+            ]
+        }
+    },
+    methods: {
+        save: function () {
+            this.contactData.address = this.contactData.address.replace("\n", "\r\n").replace("\r\r\n", "\r\n")
 
-                this.asyncActionWithNotification("update/contact", this.contactData, "Saving", (resp) => new Promise((success, error) => {
-                        if (resp.success) {
-                            success("Contact saved")
-                        } else {
-                            error("Could not save contact")
-                        }
-                    })
-                );
+            // TODO check for invalid values!
+
+            let data = Object.assign({}, this.contactData)
+
+            switch(data.vat.type) {
+                case "Code":
+                    data.vat = {Code: data.vat.value}
+                    break
+                default:
+                    data.vat = data.vat.type
             }
+
+            console.log("Saving contact: ")
+            console.log(data)
+
+            this.asyncActionWithNotification("update/contact", data, "Saving", (resp) => new Promise((success, error) => {
+                    if (resp.success) {
+                        success("Contact saved")
+                    } else {
+                        error("Could not save contact")
+                    }
+                })
+            );
         }
     }
+}
 </script>

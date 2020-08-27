@@ -3,6 +3,8 @@ use chrono::NaiveDateTime as Datetime;
 use frunk::*;
 use serde::{Deserialize, Serialize};
 
+use crate::dao::Vat;
+
 #[derive(Serialize, Deserialize, LabelledGeneric, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct Account {
@@ -19,6 +21,7 @@ pub struct Contact {
     pub code: Option<String>,
     pub name: String,
     pub address: String,
+    pub vat: Vat,
 }
 
 #[derive(Serialize, Deserialize, LabelledGeneric, Debug, Clone)]
@@ -29,6 +32,12 @@ pub struct Entrepreneur {
     pub code: String,
     pub name: String,
     pub address: String,
+    pub vat: Vat,
+    pub account_number: i64,
+    pub account_bank_code: i16,
+    pub email: Option<String>,
+    pub phone: Option<String>,
+    pub currency_code: String,
 }
 
 #[derive(Serialize, Deserialize, LabelledGeneric, Generic, Debug, Clone)]

@@ -37,6 +37,8 @@
 </template>
 
 <script>
+    // TODO display offline message when backend is not available
+
     export default {
         name: "MainApp",
         data() {

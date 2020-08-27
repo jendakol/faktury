@@ -12,22 +12,16 @@ use futures::{SinkExt, StreamExt};
 use log::debug;
 use printpdf::*;
 
-use crate::dao::{Contact, Entrepreneur, Invoice, InvoiceRow};
+use crate::dao::{Contact, Entrepreneur, Invoice, InvoiceRow, Vat};
 use crate::logic::pdf::qrcode::QrCode;
 use crate::logic::settings::AccountSettings;
 
-const PAPER_HEIGHT: f64 = 297.0;
+// const PAPER_HEIGHT: f64 = 297.0;
 const PAPER_WIDTH: f64 = 210.0;
 const PAPER_BORDER: f64 = 20.0;
 const LINE_SPACE: f64 = 5.25;
 
 mod qrcode;
-
-enum Vat {
-    Code(String),
-    NotTaxPayer,
-    DontDisplay,
-}
 
 #[derive(Debug, Clone)]
 pub struct PdfManager {
@@ -110,28 +104,8 @@ impl PdfCreator {
         invoice: Invoice,
         invoice_rows: Vec<InvoiceRow>,
     ) -> Result<PdfDocumentReference, AnyError> {
-        let account_no = "1313282017"; // TODO hard code value
-        let bank_code = 3045u16; // TODO hard code value
-
-        // TODO doesn't work! let font = doc.add_builtin_font(BuiltinFont::TimesRoman).unwrap();
-        // TODO doesn't work! let font2 = doc.add_external_font(File::open("texgyreheroscn-regular.otf").unwrap()).unwrap();
         let font_calibri_light = self.load_font("CalibriLight")?;
         let font_calibri_bold = self.load_font("CalibriBold")?;
-
-        let points_border = vec![
-            (Point::new(Mm(PAPER_BORDER), Mm(PAPER_BORDER)), false),
-            (Point::new(Mm(PAPER_BORDER), Mm(PAPER_HEIGHT - PAPER_BORDER)), false),
-            (Point::new(Mm(PAPER_WIDTH - PAPER_BORDER), Mm(PAPER_HEIGHT - PAPER_BORDER)), false),
-            (Point::new(Mm(PAPER_WIDTH - PAPER_BORDER), Mm(PAPER_BORDER)), false),
-        ];
-
-        let line = Line {
-            points: points_border,
-            is_closed: true,
-            has_fill: false,
-            has_stroke: true,
-            is_clipping_path: false,
-        };
 
         let outline_color = Color::Rgb(Rgb::new(0.0, 0.0, 0.0, None));
 
@@ -147,7 +121,7 @@ impl PdfCreator {
             .use_text(&invoice.code, 10, Mm(PAPER_BORDER), Mm(260.5), &font_calibri_light);
 
         self.current_layer.use_text(
-            invoice.created.format("%m.%d.%Y").to_string(),
+            invoice.created.format("%d.%m.%Y").to_string(),
             10,
             Mm(PAPER_BORDER + 30.0),
             Mm(260.5),
@@ -164,15 +138,15 @@ impl PdfCreator {
             &entrepreneur.name,
             &entrepreneur.address,
             Some(&entrepreneur.code),
-            &Vat::NotTaxPayer, // TODO hard code value
+            &entrepreneur.vat,
         )?;
 
         let offset_bottom = self.contact_box(
             65.0,
             offset_bottom - 2.0 * LINE_SPACE,
             &font_calibri_light,
-            "+420 123 456 789",      // TODO hard code value
-            "namesurname@gmail.com", // TODO hard code value
+            &entrepreneur.phone,
+            &entrepreneur.email,
         )?;
 
         self.lawyer_bullshit_box(65.0, offset_bottom - 2.0 * LINE_SPACE, &font_calibri_light, "Městský úřad Litvínov")?; // TODO hard code value
@@ -188,7 +162,7 @@ impl PdfCreator {
             &contact.name,
             &contact.address,
             contact.code.as_ref().map(AsRef::as_ref),
-            &Vat::DontDisplay, // TODO hard code value
+            &contact.vat,
         )?;
 
         let total_price = invoice_rows.iter().fold(0f32, |tp, r| tp + r.item_count as f32 * r.item_price);
@@ -197,18 +171,16 @@ impl PdfCreator {
 
         self.payment_box(
             65.0,
-            35.0,
+            PAPER_BORDER + 25.0,
             &font_calibri_light,
             &font_calibri_bold,
             total_price,
-            "CZK", // TODO hard code value
-            account_no,
-            bank_code,
+            &entrepreneur.currency_code,
+            entrepreneur.account_number as u64,
+            entrepreneur.account_bank_code as u16,
             &invoice.code,
             invoice.pay_until,
         )?;
-
-        // self.current_layer.add_shape(line);
 
         Ok(self.doc)
     }
@@ -261,16 +233,28 @@ impl PdfCreator {
         Ok(offset_bottom)
     }
 
-    fn contact_box(&self, offset_left: f64, offset_bottom: f64, font: &IndirectFontRef, phone: &str, email: &str) -> Result<f64, AnyError> {
+    fn contact_box(
+        &self,
+        offset_left: f64,
+        offset_bottom: f64,
+        font: &IndirectFontRef,
+        phone: &Option<String>,
+        email: &Option<String>,
+    ) -> Result<f64, AnyError> {
         let mut offset_bottom = offset_bottom;
 
         let layer = &self.current_layer;
 
-        layer.use_text(phone, 8, Mm(offset_left + 5.0), Mm(offset_bottom), font);
-        self.add_img("icon_phone.bmp", offset_left, offset_bottom - 1.0)?;
-        offset_bottom -= LINE_SPACE;
-        layer.use_text(email, 8, Mm(offset_left + 5.0), Mm(offset_bottom), font);
-        self.add_img("icon_mail.bmp", offset_left, offset_bottom - 1.0)?;
+        if let Some(phone) = phone {
+            layer.use_text(phone, 8, Mm(offset_left + 5.6), Mm(offset_bottom), font);
+            self.add_img("icon_phone.bmp", offset_left, offset_bottom - 1.0)?;
+            offset_bottom -= LINE_SPACE;
+        }
+
+        if let Some(email) = email {
+            layer.use_text(email, 8, Mm(offset_left + 5.6), Mm(offset_bottom), font);
+            self.add_img("icon_mail.bmp", offset_left, offset_bottom - 1.0)?;
+        }
 
         Ok(offset_bottom)
     }
@@ -341,7 +325,7 @@ impl PdfCreator {
         ];
 
         layer.use_text(
-            format!("{} Kč", total_price), // TODO hard code value
+            format!("{} {:03} Kč", total_price as u16 / 1000, total_price as u16 % 1000), // TODO hard code value
             10,
             Mm(PAPER_WIDTH - PAPER_BORDER - Self::price_width(total_price)),
             Mm(offset_bottom),
@@ -356,7 +340,7 @@ impl PdfCreator {
 
             layer.use_text(&row.item_name, 10, Mm(offset_left), Mm(offset_bottom), &font);
             layer.use_text(
-                format!("{} Kč", price), // TODO hard code value
+                format!("{} {:03} Kč", price as u16 / 1000, price as u16 % 1000), // TODO hard code value
                 10,
                 Mm(PAPER_WIDTH - PAPER_BORDER - Self::price_width(price)),
                 Mm(offset_bottom),
@@ -381,18 +365,16 @@ impl PdfCreator {
     fn payment_box(
         &self,
         offset_left: f64,
-        offset_bottom: f64,
+        mut offset_bottom: f64,
         font: &IndirectFontRef,
         font_bold: &IndirectFontRef,
         price: f32,
         currency: &str,
-        account_no: &str,
+        account_no: u64,
         bank_code: u16,
         vs: &str,
         due_date: NaiveDate,
     ) -> Result<(), AnyError> {
-        let mut offset_bottom = PAPER_BORDER + 25.0;
-
         let layer = &self.current_layer;
 
         // TODO hard code value
@@ -434,7 +416,7 @@ impl PdfCreator {
             color_space: ColorSpace::Greyscale,
             bits_per_component: ColorBits::Bit8,
             interpolate: true,
-            image_data: QrCode::get(price, currency, account_no, bank_code, vs, due_date)?,
+            image_data: QrCode::get(price, currency, "CZ", account_no, bank_code, vs)?,
             image_filter: None,
             clipping_bbox: None,
         };
@@ -474,7 +456,9 @@ impl PdfCreator {
 
     fn price_width(price: f32) -> f64 {
         if price >= 10_000f32 {
-            12.8
+            13.8
+        } else if price >= 1_000f32 {
+            11.8
         } else {
             10.8
         }

@@ -14,8 +14,13 @@ pub struct AccountSettings {
 
 impl From<&Account> for AccountSettings {
     fn from(account: &Account) -> Self {
-        serde_json::from_str(account.settings.as_str())
-            .expect("It must never fail - serde has defaults")
+        let account_settings_str = if account.settings.len() > 0 {
+            account.settings.as_str()
+        } else {
+            "{}" // a default, empty json
+        };
+
+        serde_json::from_str(account_settings_str).expect("It must never fail - serde has defaults. Is valid JSON stored?")
     }
 }
 

@@ -1,17 +1,23 @@
 use std::convert::TryFrom;
 use std::future::Future;
+use std::io::Write;
 use std::ops::Deref;
 use std::sync::{Arc, Mutex};
 
 use chrono::{Duration, NaiveDateTime as DateTime};
+use diesel::backend::Backend;
+use diesel::deserialize::FromSql;
 use diesel::dsl::max;
 use diesel::mysql::MysqlConnection;
 use diesel::prelude::*;
-use diesel::{delete, insert_into, select};
+use diesel::serialize::{Output, ToSql};
+use diesel::sql_types::VarChar;
+use diesel::{delete, deserialize, insert_into, select, serialize};
 use diesel::{sql_types, update};
 use diesel_logger::LoggingConnection;
 use err_context::AnyError;
 use log::{debug, warn};
+use serde::{Deserialize, Serialize};
 
 use crate::config::DbConfig;
 use crate::dao::models::NewInvoice;
@@ -26,6 +32,34 @@ embed_migrations!("migrations");
 
 pub type DaoResult<A> = Result<A, AnyError>;
 pub type InvoiceWithAllInfo = (Invoice, f64, String);
+
+#[derive(Debug, Serialize, Deserialize, FromSqlRow, AsExpression, PartialEq, Clone)]
+#[sql_type = "VarChar"]
+pub enum Vat {
+    Code(String),
+    NotTaxPayer,
+    DontDisplay,
+}
+
+impl<DB> FromSql<VarChar, DB> for Vat
+where
+    DB: Backend,
+    String: FromSql<VarChar, DB>,
+{
+    fn from_sql(bytes: Option<&DB::RawValue>) -> deserialize::Result<Self> {
+        Ok(serde_json::from_str(&String::from_sql(bytes)?)?)
+    }
+}
+
+impl<DB> ToSql<VarChar, DB> for Vat
+where
+    DB: Backend,
+    String: ToSql<VarChar, DB>,
+{
+    fn to_sql<W: Write>(&self, out: &mut Output<W, DB>) -> serialize::Result {
+        serde_json::to_string(self)?.to_sql(out)
+    }
+}
 
 #[derive(Clone)]
 pub struct Dao {

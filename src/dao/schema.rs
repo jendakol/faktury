@@ -14,6 +14,7 @@ table! {
         code -> Nullable<Varchar>,
         name -> Varchar,
         address -> Varchar,
+        vat -> Varchar,
     }
 }
 
@@ -24,6 +25,12 @@ table! {
         code -> Varchar,
         name -> Varchar,
         address -> Varchar,
+        vat -> Varchar,
+        account_number -> Bigint,
+        account_bank_code -> Smallint,
+        email -> Nullable<Varchar>,
+        phone -> Nullable<Varchar>,
+        currency_code -> Varchar,
     }
 }
 

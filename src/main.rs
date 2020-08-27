@@ -59,6 +59,8 @@ async fn main() {
 
     info!("Starting server on {}", addr);
 
+    // TODO CORS headers
+
     HttpServer::new(move || {
         App::new()
             .app_data(web::Data::new(RequestContext {
