@@ -99,7 +99,7 @@
     export default {
         name: 'Contacts',
         mounted() {
-            this.ajax('get/contacts/' + this.getEntrepreneurId()).then(data => {
+            this.ajax('data-get/contacts/' + this.getEntrepreneurId()).then(data => {
                 this.contacts = data;
                 this.loading = false;
                 this.filterData()
@@ -161,7 +161,7 @@
                 console.log("Adding new contact: ")
                 console.log(contact)
 
-                this.asyncActionWithNotification("insert/contact", contact, "Saving", (resp) => new Promise((success, error) => {
+                this.asyncActionWithNotification("data-insert/contact", contact, "Saving", (resp) => new Promise((success, error) => {
                         if (resp.id >= 0) {
                             success("Contact saved")
                             this.$router.push({name: 'ContactDetail', params: {id: resp.id}})
@@ -182,7 +182,7 @@
                             text: 'Yes', action: (toast) => {
                                 console.log("Deleting contact " + id)
 
-                                this.ajax("delete/contact/" + id).then(r => {
+                                this.ajax("data-delete/contact/" + id).then(r => {
                                     if (r.success) {
                                         this.$set(this, 'contacts', this.lodash.filter(this.contacts, function (e) {
                                             return e.id !== id

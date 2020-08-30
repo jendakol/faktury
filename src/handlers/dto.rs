@@ -85,6 +85,20 @@ pub struct InvoiceWithRows {
     pub rows: Vec<InvoiceRow>,
 }
 
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct LoginSession {
+    pub id: String,
+    pub account_id: u32,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct LoginSessionCreated {
+    pub encoded_value: String,
+    pub ttl: u64,
+}
+
 // ****** New*:
 
 #[derive(Deserialize, Debug)]
@@ -155,6 +169,15 @@ impl From<crate::dao::InvoiceWithAllInfo> for InvoiceWithAllInfo {
 impl From<crate::dao::InvoiceRow> for InvoiceRow {
     fn from(i: crate::dao::InvoiceRow) -> Self {
         frunk::labelled_convert_from(i)
+    }
+}
+
+impl From<crate::dao::LoginSession> for LoginSession {
+    fn from(s: crate::dao::LoginSession) -> Self {
+        LoginSession {
+            id: s.id,
+            account_id: s.account_id as u32,
+        }
     }
 }
 

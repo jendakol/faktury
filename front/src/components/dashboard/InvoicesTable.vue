@@ -64,7 +64,7 @@
     export default {
         name: 'InvoicesTable',
         mounted() {
-            this.ajax('get/invoices/' + this.getEntrepreneurId()).then(data => {
+            this.ajax('data-get/invoices/' + this.getEntrepreneurId()).then(data => {
                 this.invoices = data;
                 this.loading = false;
             });
@@ -91,7 +91,7 @@
                             text: 'Yes', action: (toast) => {
                                 console.log("Deleting invoice " + id)
 
-                                this.ajax("delete/invoice/" + id).then(r => {
+                                this.ajax("data-delete/invoice/" + id).then(r => {
                                     if (r.success) {
                                         this.$set(this, 'invoices', this.lodash.filter(this.invoices, function (e) {
                                             return e.id !== id

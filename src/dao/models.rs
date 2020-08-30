@@ -114,3 +114,17 @@ pub struct NewInvoiceRow {
     pub item_price: f32,
     pub item_count: i16,
 }
+
+#[derive(Identifiable, Queryable, Associations, AsChangeset, LabelledGeneric, PartialEq, Debug, Clone)]
+#[belongs_to(Account)]
+pub struct LoginSession {
+    pub id: String,
+    pub account_id: i32,
+}
+
+#[derive(Debug, Insertable)]
+#[table_name = "login_sessions"]
+pub struct NewSession<'a> {
+    pub id: &'a str,
+    pub account_id: i32,
+}

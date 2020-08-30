@@ -59,7 +59,7 @@
 
                 this.contactsLoading = true
 
-                this.ajax("get/contacts/" + this.getEntrepreneurId(), {}).then(r => {
+                this.ajax("data-get/contacts/" + this.getEntrepreneurId(), {}).then(r => {
                     this.contacts = r
                 }).finally(() => (this.contactsLoading = false))
             },

@@ -21,7 +21,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::config::DbConfig;
 use crate::dao::models::NewInvoice;
-pub use crate::dao::models::{Account, Contact, Entrepreneur, Invoice, InvoiceRow};
+pub use crate::dao::models::{Account, Contact, Entrepreneur, Invoice, InvoiceRow, LoginSession};
 
 mod models;
 mod schema;
@@ -98,6 +98,63 @@ no_arg_sql_function!(last_insert_id, sql_types::Integer);
 // TODO macro for select_single?
 
 impl Dao {
+    // *** ACCOUNT:
+
+    pub async fn find_account(&self, username: &str, password: &str) -> DaoResult<Option<Account>> {
+        use schema::accounts::dsl as table;
+
+        self.with_connection(|conn| {
+            table::accounts
+                .filter(table::username.eq(username))
+                .filter(table::password.eq(password))
+                .first(conn)
+                .optional()
+        })
+        .await
+        .map_err(Self::map_db_error)
+    }
+
+    pub async fn new_session(&self, account: &Account) -> DaoResult<LoginSession> {
+        use schema::login_sessions::dsl as table;
+
+        let session_id = uuid::Uuid::new_v4().to_string();
+
+        self.with_connection(|conn| {
+            insert_into(table::login_sessions)
+                .values((table::id.eq(&session_id), table::account_id.eq(account.id)))
+                .execute(conn)
+                .map_err(Self::map_db_error)
+        })
+        .await?;
+
+        Ok(self
+            .get_session(&session_id)
+            .await?
+            .expect("Must find newly inserted login session!"))
+    }
+
+    pub async fn find_session(&self, id: &str) -> DaoResult<Option<LoginSession>> {
+        use schema::login_sessions::dsl as table;
+
+        self.with_connection(|conn| table::login_sessions.filter(table::id.eq(id)).first(conn).optional())
+            .await
+            .map_err(Self::map_db_error)
+    }
+
+    pub async fn revoke_session(&self, session_id: String) -> DaoResult<()> {
+        use schema::login_sessions::dsl as table;
+
+        self.with_connection(|conn| {
+            delete(table::login_sessions)
+                .filter(table::id.eq(session_id))
+                .execute(conn)
+                .map_err(Self::map_db_error)
+        })
+        .await?;
+
+        Ok(())
+    }
+
     // *** GET SINGLE:
 
     pub async fn get_account(&self, id: u32) -> DaoResult<Option<Account>> {
@@ -179,6 +236,14 @@ impl Dao {
         use schema::contacts::dsl as table;
 
         self.with_connection(|conn| table::contacts.filter(table::id.eq(id as i32)).first(conn).optional())
+            .await
+            .map_err(Self::map_db_error)
+    }
+
+    pub async fn get_session(&self, id: &str) -> DaoResult<Option<LoginSession>> {
+        use schema::login_sessions::dsl as table;
+
+        self.with_connection(|conn| table::login_sessions.filter(table::id.eq(id)).first(conn).optional())
             .await
             .map_err(Self::map_db_error)
     }

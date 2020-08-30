@@ -42,7 +42,7 @@ export default {
     name: 'ContactDetail',
     components: {},
     mounted() {
-        this.ajax("get/contact/" + this.$route.params.id, {}).then(r => {
+        this.ajax("data-get/contact/" + this.$route.params.id, {}).then(r => {
             console.log("R: " + JSON.stringify(r));
             this.contactData = r
 
@@ -91,7 +91,7 @@ export default {
             console.log("Saving contact: ")
             console.log(data)
 
-            this.asyncActionWithNotification("update/contact", data, "Saving", (resp) => new Promise((success, error) => {
+            this.asyncActionWithNotification("data-update/contact", data, "Saving", (resp) => new Promise((success, error) => {
                     if (resp.success) {
                         success("Contact saved")
                     } else {

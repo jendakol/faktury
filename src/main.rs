@@ -12,11 +12,12 @@ use std::str::FromStr;
 
 use actix_cors::Cors;
 use actix_files::NamedFile;
-use actix_web::{middleware, web, App, HttpRequest, HttpServer, Result as ActixResult};
-use log::{info, trace};
+use actix_web::{middleware, web, App, FromRequest, HttpRequest, HttpServer, Result as ActixResult};
+use log::{debug, info, trace};
 
-use crate::config::AppConfig;
+use crate::config::{AccountsConfig, AppConfig};
 use crate::dao::Dao;
+use crate::handlers::LoginSessionExtractorConfig;
 use crate::logic::pdf::PdfManager;
 
 mod config;
@@ -24,9 +25,11 @@ mod dao;
 mod handlers;
 mod logic;
 
+#[derive(Clone)]
 pub struct RequestContext {
     dao: Dao,
     pdf_manager: PdfManager,
+    accounts_config: AccountsConfig,
 }
 
 async fn web_ui(req: HttpRequest) -> ActixResult<NamedFile> {
@@ -52,24 +55,34 @@ async fn main() {
 
     let config_file = env::var("CONFIG_FILE").unwrap_or_else(|_| String::from("/config.toml"));
 
-    let config = AppConfig::load(&config_file).unwrap(); // let it fail
-    let dao = Dao::try_from(config.database).unwrap(); // let it fail
-    let pdf_manager = PdfManager::new().unwrap(); // let it fail
-    let addr = SocketAddr::from_str(&config.http.listen).unwrap(); // let it fail
+    debug!("Using config file {}", config_file);
+
+    let config = AppConfig::load(&config_file).expect("Could not load configuration file!"); // let it fail
+    let dao = Dao::try_from(config.database.clone()).expect("Could not initialize DB connection!"); // let it fail
+    let pdf_manager = PdfManager::new().expect("Could not initialize PDF manager!"); // let it fail
+    let addr = SocketAddr::from_str(&config.http.listen).expect("Could not parse listen address!"); // let it fail
 
     info!("Starting server on {}", addr);
 
     // TODO CORS headers
 
     HttpServer::new(move || {
+        let request_context = RequestContext {
+            dao: dao.clone(),
+            pdf_manager: pdf_manager.clone(),
+            accounts_config: config.accounts.clone(),
+        };
+
         App::new()
-            .app_data(web::Data::new(RequestContext {
-                dao: dao.clone(),
-                pdf_manager: pdf_manager.clone(),
+            .app_data(web::Data::new(request_context.clone()))
+            .app_data(handlers::LoginSession::configure(|_cfg| LoginSessionExtractorConfig {
+                ctx: Some(request_context),
             }))
-            .wrap(Cors::new().supports_credentials().finish()) // TODO limit
+            .wrap(Cors::default()) // TODO limit
             .wrap(middleware::Compress::default())
             .service(handlers::download_invoice)
+            .service(handlers::account_login)
+            .service(handlers::account_logout)
             .service(handlers::get_entrepreneur)
             .service(handlers::get_contact)
             .service(handlers::get_invoice)
@@ -89,6 +102,7 @@ async fn main() {
             .service(handlers::delete_contact)
             .service(handlers::delete_invoice)
             .service(handlers::delete_invoice_row)
+            .service(handlers::status)
             .route("/{filename:.*}", web::get().to(web_ui))
     })
     .bind(addr)

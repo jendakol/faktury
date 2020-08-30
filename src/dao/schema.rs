@@ -56,10 +56,18 @@ table! {
     }
 }
 
+table! {
+    login_sessions (id) {
+        id -> VarChar,
+        account_id -> Integer,
+    }
+}
+
 joinable!(contacts -> entrepreneurs (entrepreneur_id));
 joinable!(entrepreneurs -> accounts (account_id));
 joinable!(invoice_rows -> invoices (invoice_id));
 joinable!(invoices -> contacts (contact_id));
 joinable!(invoices -> entrepreneurs (entrepreneur_id));
+joinable!(login_sessions -> accounts (account_id));
 
 allow_tables_to_appear_in_same_query!(accounts, contacts, entrepreneurs, invoices, invoice_rows,);

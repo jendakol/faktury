@@ -69,7 +69,7 @@
                     itemCount: parseInt(this.count)
                 };
 
-                this.ajax("insert/invoice-row", row).then(resp => {
+                this.ajax("data-insert/invoice-row", row).then(resp => {
                     if (resp.id >= 0) {
                         this.$emit("row-inserted", resp)
                     }

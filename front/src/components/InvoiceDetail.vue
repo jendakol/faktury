@@ -136,10 +136,10 @@ export default {
         Datetime
     },
     mounted() {
-        this.ajax("get/invoice-with-rows/" + this.$route.params.id).then(invoice => {
+        this.ajax("data-get/invoice-with-rows/" + this.$route.params.id).then(invoice => {
             Promise.all([
-                this.ajax("get/contact/" + invoice.invoice.contactId),
-                this.ajax("get/entrepreneur/" + invoice.invoice.entrepreneurId),
+                this.ajax("data-get/contact/" + invoice.invoice.contactId),
+                this.ajax("data-get/entrepreneur/" + invoice.invoice.entrepreneurId),
             ]).then(([contact, entrepreneur]) => {
                 this.invoiceData = invoice.invoice
                 this.invoiceRows = invoice.rows
@@ -173,7 +173,7 @@ export default {
             console.log("Saving invoice metadata")
             console.log(this.invoiceData)
 
-            this.asyncActionWithNotification("update/invoice", this.invoiceData, "Saving", (resp) => new Promise((success, error) => {
+            this.asyncActionWithNotification("data-update/invoice", this.invoiceData, "Saving", (resp) => new Promise((success, error) => {
                     if (resp.success) {
                         success("Invoice saved")
                     } else {
@@ -195,7 +195,7 @@ export default {
 
                             console.log("Deleting invoice row " + id)
 
-                            this.ajax("delete/invoice/" + id, {}).then(r => {
+                            this.ajax("data-delete/invoice/" + id, {}).then(r => {
                                 if (r.success) {
                                     this.$router.replace("/invoices")
                                 } else {

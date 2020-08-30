@@ -60,6 +60,16 @@ CREATE TABLE `invoice_rows`
     PRIMARY KEY (`id`)
 ) ENGINE = InnoDB;
 
+CREATE TABLE `login_sessions`
+(
+    `id`         VARCHAR(200) NOT NULL,
+    `account_id` INT          NOT NULL,
+    PRIMARY KEY (`id`),
+    FOREIGN KEY (account_id)
+        REFERENCES `accounts` (id)
+        ON DELETE CASCADE
+) ENGINE = InnoDB;
+
 ALTER TABLE `contacts`
     ADD FOREIGN KEY (`entrepreneur_id`) REFERENCES `entrepreneurs` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 

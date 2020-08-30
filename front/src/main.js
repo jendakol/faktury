@@ -4,6 +4,12 @@ import '../sass/style.scss';
 
 Vue.config.productionTip = false
 
+import {Vue2Storage} from 'vue2-storage'
+Vue.use(Vue2Storage, {
+  prefix: 'faktury_',
+  driver: 'local',
+})
+
 import vuetify from './plugins/vuetify'
 import 'vuetify/dist/vuetify.min.css'
 

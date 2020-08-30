@@ -7,8 +7,8 @@ const StateStore = new Vuex.Store({
     state: {
         // loggedUserId: 1, // TODO support login
         // entrepreneurId: 1,
-        loggedUserId: 2, // TODO support login
-        entrepreneurId: 3,
+        // loggedUserId: 2, // TODO support login
+        // entrepreneurId: 3,
         locale: "cs-CZ"
     },
     getters: {

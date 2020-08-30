@@ -16,16 +16,22 @@ let GlobalFunctions = {
         getEntrepreneurId: function () {
             return this.$store.getters.entrepreneurId;
         },
+        getLoggedSession: function () {
+            if (this.$storage.has('login-session')) {
+                return JSON.parse(atob(this.$storage.get('login-session')))
+            }
+
+            return null;
+        },
         ajax(name, data, timeout) {
-            return axios.post(this.hostUrl + "/data-" + name, data, {timeout: timeout === undefined ? 5000 : timeout})
+            return axios.post(this.hostUrl + "/" + name, data, {
+                timeout: timeout === undefined ? 5000 : timeout,
+                headers: {"X-Faktury-Auth": this.$storage.get('login-session')}
+            })
                 .then(t => {
                     return t.data;
                 }).catch(err => {
-                    console.log(err);
-                    this.$snotify.error("Error", err, {
-                        closeOnClick: true,
-                        timeout: 5000
-                    })
+                    return Promise.resolve({error: err})
                 })
         }, asyncActionWithNotification(name, data, initialText, responseToPromise) {
             this.$snotify.async(initialText, () => new Promise((resolve, reject) => {
@@ -39,15 +45,18 @@ let GlobalFunctions = {
                                     timeout: 3500
                                 }
                             })
-                        }, errText => reject({
-                            body: errText,
-                            config: {
-                                closeOnClick: true,
-                                timeout: 3500
-                            }
-                        }))
+                        }, errText => {
+                            reject({
+                                    body: errText,
+                                    config: {
+                                        closeOnClick: true,
+                                        timeout: 3500
+                                    }
+                                }
+                            )
+                        })
                 }).catch(err => {
-                    console.log(JSON.stringify(err.response.data));
+                    console.log("ERROR:" + JSON.stringify(err.response.data));
                     responseToPromise(err.response.data)
                         .then(text => {
                             resolve({
