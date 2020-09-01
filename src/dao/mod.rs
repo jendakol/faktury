@@ -305,17 +305,19 @@ impl Dao {
             .expect("Must find newly inserted entrepreneur!"))
     }
 
-    pub async fn insert_contact(&self, ent_id: u32, code: &str, name: &str, addr: &str) -> DaoResult<Contact> {
+    pub async fn insert_contact(&self, ent_id: u32, code: &str, name: &str, addr: &str, vat: &Vat) -> DaoResult<Contact> {
         let id = self
             .with_connection(|conn| {
                 use schema::contacts::dsl as table;
 
+                // TODO null instead of empty code
                 insert_into(table::contacts)
                     .values((
                         table::code.eq(code),
                         table::entrepreneur_id.eq(ent_id as i32),
                         table::name.eq(name),
                         table::address.eq(addr),
+                        table::vat.eq(vat),
                     ))
                     .execute(conn)
                     .map_err(Self::map_db_error)

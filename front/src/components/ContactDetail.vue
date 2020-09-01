@@ -80,7 +80,7 @@ export default {
 
             let data = Object.assign({}, this.contactData)
 
-            switch(data.vat.type) {
+            switch (data.vat.type) {
                 case "Code":
                     data.vat = {Code: data.vat.value}
                     break

@@ -42,7 +42,7 @@
                 console.log("Adding new invoice: ")
                 console.log(invoice)
 
-                this.asyncActionWithNotification("insert/invoice", invoice, "Saving", (resp) => new Promise((success, error) => {
+                this.asyncActionWithNotification("data-insert/invoice", invoice, "Saving", (resp) => new Promise((success, error) => {
                         if (resp.id >= 0) {
                             success("Invoice created")
                             this.$router.push({name: 'InvoiceDetail', params: {id: resp.id}})

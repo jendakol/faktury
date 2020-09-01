@@ -108,6 +108,7 @@ pub struct NewContact {
     pub entrepreneur_id: u32,
     pub name: String,
     pub address: String,
+    pub vat: Vat,
 }
 
 #[derive(Deserialize, Debug)]

@@ -100,7 +100,7 @@
                 console.log("Save invoice row: ")
                 console.log(this.data)
 
-                this.asyncActionWithNotification("update/invoice-row", this.data, "Saving", (resp) => new Promise((success, error) => {
+                this.asyncActionWithNotification("data-update/invoice-row", this.data, "Saving", (resp) => new Promise((success, error) => {
                         if (resp.success) {
                             success("Row saved")
                             this.$emit("row-saved", id)

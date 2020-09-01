@@ -198,8 +198,13 @@ pub async fn insert_contact(contact: web::Json<NewContact>, _session: LoginSessi
 
     // TODO check account rights
     with_ok(
-        ctx.dao
-            .insert_contact(contact.entrepreneur_id, &contact.code, &contact.name, &contact.address),
+        ctx.dao.insert_contact(
+            contact.entrepreneur_id,
+            &contact.code,
+            &contact.name,
+            &contact.address,
+            &contact.vat,
+        ),
         |i| async { HttpResponse::Ok().json::<dto::Contact>(i.into()) },
     )
     .await
