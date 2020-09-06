@@ -26,6 +26,8 @@ table! {
         name -> Varchar,
         address -> Varchar,
         vat -> Varchar,
+        account_number_country_code -> Varchar,
+        account_number_prefix -> Nullable<Smallint>,
         account_number -> Bigint,
         account_bank_code -> Smallint,
         email -> Nullable<Varchar>,

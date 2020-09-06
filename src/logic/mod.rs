@@ -6,6 +6,7 @@ use settings::AccountSettings;
 
 use crate::dao::{Dao, Invoice};
 
+pub mod iban;
 pub mod invoices;
 pub mod pdf;
 pub mod settings;

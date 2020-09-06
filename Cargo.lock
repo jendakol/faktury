@@ -833,6 +833,7 @@ dependencies = [
  "frunk_core",
  "futures",
  "humantime",
+ "iban_validate",
  "log",
  "printpdf",
  "qrcode-generator",
@@ -1148,6 +1149,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "df004cfca50ef23c36850aaaa59ad52cc70d0e90243c3c7737a4dd32dc7a3c4f"
 dependencies = [
  "quick-error",
+]
+
+[[package]]
+name = "iban_validate"
+version = "4.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ae1dbb2046534ff3eda29fa47148f3e28011cbaf063dd5893edf89f47c3fe115"
+dependencies = [
+ "arrayvec",
 ]
 
 [[package]]

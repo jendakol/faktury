@@ -33,6 +33,8 @@ pub struct Entrepreneur {
     pub name: String,
     pub address: String,
     pub vat: Vat,
+    pub account_number_country_code: String,
+    pub account_number_prefix: Option<i16>,
     pub account_number: i64,
     pub account_bank_code: i16,
     pub email: Option<String>,
