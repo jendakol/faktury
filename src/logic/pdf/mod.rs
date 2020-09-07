@@ -98,7 +98,7 @@ impl PdfCreator {
 
     fn create(
         self,
-        _settings: AccountSettings,
+        settings: AccountSettings,
         entrepreneur: Entrepreneur,
         contact: Contact,
         invoice: Invoice,
@@ -150,7 +150,10 @@ impl PdfCreator {
         )?;
 
         self.lawyer_bullshit_box(65.0, offset_bottom - 2.0 * LINE_SPACE, &font_calibri_light, "Městský úřad Litvínov")?; // TODO hard code value
-        self.lawyer_bullshit_box2(132.5, offset_bottom - 2.0 * LINE_SPACE, &font_calibri_light)?;
+
+        if settings.invoice.show_lawyerbox_handover {
+            self.lawyer_bullshit_box2(132.5, offset_bottom - 2.0 * LINE_SPACE, &font_calibri_light)?;
+        }
 
         // contact
         let _ = self.entrepreneur_box(

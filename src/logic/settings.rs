@@ -30,6 +30,8 @@ pub struct AccountInvoiceSettings {
     pub naming_schema: InvoiceNamingSchemaType,
     #[serde(default, with = "default_due_length_serde")]
     pub default_due_length: DefaultDueLength,
+    #[serde(default)]
+    pub show_lawyerbox_handover: bool,
 }
 
 #[derive(Clone, Debug)]
