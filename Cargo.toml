@@ -15,7 +15,7 @@ env_logger = "~0.7"
 err-context = "~0.1"
 humantime = "~1.3"
 config = "~0.10"
-diesel = { version = "~1.4", features = ["mysql", "chrono"] }
+diesel = { version = "~1.4", features = ["mysql", "chrono", "r2d2"] }
 diesel_logger = "~0.1"
 diesel_migrations = "~1.4"
 dotenv = "~0.15"

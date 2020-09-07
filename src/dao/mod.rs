@@ -1,7 +1,6 @@
 use std::convert::TryFrom;
 use std::future::Future;
 use std::io::Write;
-use std::ops::Deref;
 use std::sync::{Arc, Mutex};
 
 use chrono::{Duration, NaiveDateTime as DateTime};
@@ -10,6 +9,7 @@ use diesel::deserialize::FromSql;
 use diesel::dsl::max;
 use diesel::mysql::MysqlConnection;
 use diesel::prelude::*;
+use diesel::r2d2::{ConnectionManager, Pool, PooledConnection};
 use diesel::serialize::{Output, ToSql};
 use diesel::sql_types::VarChar;
 use diesel::{delete, deserialize, insert_into, select, serialize};
@@ -32,6 +32,10 @@ embed_migrations!("migrations");
 
 pub type DaoResult<A> = Result<A, AnyError>;
 pub type InvoiceWithAllInfo = (Invoice, f64, String);
+
+type MysqlConnectionManager = ConnectionManager<LoggingConnection<MysqlConnection>>;
+type MysqlPool = Pool<MysqlConnectionManager>;
+type MysqlPooledConnection = PooledConnection<MysqlConnectionManager>;
 
 #[derive(Debug, Serialize, Deserialize, FromSqlRow, AsExpression, PartialEq, Clone)]
 #[sql_type = "VarChar"]
@@ -63,7 +67,7 @@ where
 
 #[derive(Clone)]
 pub struct Dao {
-    connection: Arc<Mutex<LoggingConnection<MysqlConnection>>>,
+    pool: Arc<Mutex<MysqlPool>>,
 }
 
 impl TryFrom<DbConfig> for Dao {
@@ -75,21 +79,26 @@ impl TryFrom<DbConfig> for Dao {
             config.username, config.password, config.host, config.port, config.db_name, config.prefer_socket
         );
 
-        // TODO connection pooling?
-
         debug!("Connecting to MySQL @ {}:{}", config.host, config.port);
 
-        let connection = MysqlConnection::establish(&database_url)
+        let manager: MysqlConnectionManager = ConnectionManager::new(&database_url);
+
+        let pool = Pool::builder()
+            .max_size(config.max_pool_size as u32)
+            .build(manager)
+            .map_err(|e| AnyError::from(format!("Error connecting to {}: {}", database_url, e)))?;
+
+        let connection: MysqlPooledConnection = pool
+            .get()
             .map_err(|e| AnyError::from(format!("Error connecting to {}: {}", database_url, e)))?;
 
         if let Err(f) = embedded_migrations::run(&connection) {
             warn!("Error while migrating the DB: {}", f)
         }
 
-        let connection = LoggingConnection::new(connection);
-        let connection = Arc::new(Mutex::new(connection));
+        let pool = Arc::new(Mutex::new(pool));
 
-        Ok(Dao { connection })
+        Ok(Dao { pool })
     }
 }
 
@@ -530,15 +539,17 @@ impl Dao {
 
     fn with_connection<F, R>(&self, f: F) -> impl Future<Output = R>
     where
-        F: FnOnce(&LoggingConnection<MysqlConnection>) -> R,
+        F: FnOnce(&MysqlConnection) -> R,
     {
-        let lock = self.connection.clone();
+        let lock = self.pool.clone();
 
         futures::future::lazy(move |_| {
-            let conn = lock.lock().unwrap();
-            let conn = conn.deref();
+            let conn: MysqlPooledConnection = {
+                let pool = lock.lock().expect("Could not get connection pool mutex lock");
+                pool.get().expect("Coul")
+            };
 
-            f(conn)
+            f(&conn)
         })
     }
 

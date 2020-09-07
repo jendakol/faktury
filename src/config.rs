@@ -17,6 +17,7 @@ pub struct DbConfig {
     pub username: String,
     pub password: String,
     pub prefer_socket: bool,
+    pub max_pool_size: u8,
 }
 
 #[derive(Debug, Deserialize, Clone)]
