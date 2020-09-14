@@ -14,7 +14,7 @@ pub struct AccountSettings {
 
 impl From<&Account> for AccountSettings {
     fn from(account: &Account) -> Self {
-        let account_settings_str = if account.settings.len() > 0 {
+        let account_settings_str = if account.settings.is_empty() {
             account.settings.as_str()
         } else {
             "{}" // a default, empty json

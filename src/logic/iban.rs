@@ -1,7 +1,7 @@
 use err_context::AnyError;
 
 pub fn create(country_code: &str, account_prefix: Option<u64>, account: u64, bank_code: u16) -> Result<String, AnyError> {
-    return match country_code {
+    match country_code {
         "CZ" | "SK" => {
             let account_prefix = account_prefix.unwrap_or_default();
 
@@ -12,7 +12,7 @@ pub fn create(country_code: &str, account_prefix: Option<u64>, account: u64, ban
             Ok(format!("{}{}{}", country_code, chsm, iban))
         }
         _ => Err(AnyError::from(format!("Unsupported country code: {}", country_code))),
-    };
+    }
 }
 
 fn checksum(iban: &str) -> u8 {
@@ -41,7 +41,7 @@ mod tests {
     fn basic1() {
         let iban_expected = "CZ6508000000192000145399";
 
-        let iban_created = create("CZ", Some(19), 2000145399, 0800).unwrap();
+        let iban_created = create("CZ", Some(19), 2000145399, 800).unwrap();
 
         assert_eq!(iban_expected, iban_created.as_str());
         iban_created.parse::<Iban>().unwrap(); // check it's valid

@@ -190,6 +190,7 @@ impl PdfCreator {
         Ok(self.doc)
     }
 
+    #[allow(clippy::too_many_arguments)]
     fn entrepreneur_box(
         &self,
         offset_left: f64,
@@ -367,6 +368,7 @@ impl PdfCreator {
         Ok(())
     }
 
+    #[allow(clippy::too_many_arguments)]
     fn payment_box(
         &self,
         offset_left: f64,

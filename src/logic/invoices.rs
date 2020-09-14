@@ -5,10 +5,7 @@ use inner::*;
 
 use crate::dao::Dao;
 
-pub async fn next_code(
-    dao: &Dao,
-    naming_type: InvoiceNamingSchemaType,
-) -> Result<String, AnyError> {
+pub async fn next_code(dao: &Dao, naming_type: InvoiceNamingSchemaType) -> Result<String, AnyError> {
     match naming_type {
         InvoiceNamingSchemaType::Default => DefaultInvoiceNaming::next_code(dao).await,
     }
@@ -50,13 +47,7 @@ mod inner {
 
             // TODO make the format better
 
-            Ok(format!(
-                "{}{:02}{:02}{}",
-                now.year(),
-                now.month(),
-                now.day(),
-                next_id
-            ))
+            Ok(format!("{}{:02}{:02}{}", now.year(), now.month(), now.day(), next_id))
         }
     }
 }
