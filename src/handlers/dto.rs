@@ -106,7 +106,7 @@ pub struct LoginSessionCreated {
 #[derive(Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct NewContact {
-    pub code: String,
+    pub code: Option<String>,
     pub entrepreneur_id: u32,
     pub name: String,
     pub address: String,

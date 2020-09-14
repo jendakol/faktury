@@ -163,7 +163,7 @@ export default {
         saveNewContact: function () {
             // TODO validation
             let contact = {
-                code: this.newDialog.code,
+                code: this.newDialog.code !== "" ? this.newDialog.code : null,
                 name: this.newDialog.name,
                 address: this.newDialog.address,
                 entrepreneurId: this.getEntrepreneurId()

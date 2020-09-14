@@ -87,6 +87,8 @@ export default {
                     data.vat = data.vat.type
             }
 
+            data.code = data.code !== "" ? data.code : null // empty to null
+
             console.log("Saving contact: ")
             console.log(data)
 
