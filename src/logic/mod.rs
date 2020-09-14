@@ -6,15 +6,16 @@ use settings::AccountSettings;
 
 use crate::dao::{Dao, Invoice};
 
+pub mod auth;
 pub mod iban;
 pub mod invoices;
 pub mod pdf;
 pub mod settings;
 
 pub async fn download_invoice(
-    id: u32,
     dao: &Dao,
     pdf_manager: &PdfManager,
+    id: u32,
 ) -> Result<(Invoice, impl futures::Stream<Item = Result<Bytes, ()>>), AnyError> {
     let (invoice, rows) = match dao.get_invoice_with_rows(id).await? {
         Some(iwr) => iwr,

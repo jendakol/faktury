@@ -537,7 +537,7 @@ impl Dao {
 
     // *** HELPER METHODS:
 
-    fn with_connection<F, R>(&self, f: F) -> impl Future<Output = R>
+    pub fn with_connection<F, R>(&self, f: F) -> impl Future<Output = R>
     where
         F: FnOnce(&MysqlConnection) -> R,
     {
