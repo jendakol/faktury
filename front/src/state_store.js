@@ -5,25 +5,23 @@ Vue.use(Vuex)
 
 const StateStore = new Vuex.Store({
     state: {
-        // loggedUserId: 1, // TODO support login
-        // entrepreneurId: 1,
-        // loggedUserId: 2, // TODO support login
-        // entrepreneurId: 3,
+        loggedUserId: 0,
+        entrepreneurId: 0,
         locale: "cs-CZ"
     },
     getters: {
         loggedUserId: function(state) {
-            console.log("Getting user id: " + state.loggedUserId)
+            // console.log("Getting user id: " + state.loggedUserId)
             return state.loggedUserId
         },
         entrepreneurId: function(state) {
-            console.log("Getting entrepreneur id: " + state.entrepreneurId)
+            // console.log("Getting entrepreneur id: " + state.entrepreneurId)
             return state.entrepreneurId
         }
     },
     mutations: {
         login(state, id) {
-            console.log("Logged user id: " + id)
+            console.log("New logged user id: " + id)
             state.loggedUserId = id
         },
         setEntrepreneur(state, id) {

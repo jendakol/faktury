@@ -71,16 +71,33 @@ export default {
                             error("Login has failed due to uknown error!")
                         }
                     } else if (resp.encodedValue !== "") {
-                        success("Login successful!")
-
                         let session = JSON.parse(atob(resp.encodedValue))
                         console.log("Logged in as " + this.loginForm.username + ": " + JSON.stringify(session))
+                        let accountId = session.accountId
 
                         this.$storage.set('login-session', resp.encodedValue, {ttl: resp.ttl})
-                        this.$storage.set('entrepreneur', 3) // TODO hardcoded
-                        this.$store.commit('login', session.accountId)
-                        this.$store.commit('setEntrepreneur', 3)
-                        this.$emit("login")
+                        this.$store.commit('login', accountId)
+
+                        this.ajax("data-get/entrepreneurs").then(ents => {
+                            success("Login successful!")
+
+                            if (ents.length === 1) {
+                                let entrepreneur = ents[0]
+
+                                let entrepreneurId = entrepreneur.id
+
+                                this.$storage.set('entrepreneur', entrepreneurId)
+                                this.$store.commit('setEntrepreneur', entrepreneurId)
+                            } else {
+                                // TODO Unsupported: multiple entrepreneurs
+                                alert("Unsupported: multiple entrepreneurs")
+                            }
+
+                            this.$emit("login")
+                        }).catch(e => {
+                            console.log(e)
+                            error("Could not get entrepreneurs list!")
+                        })
                     } else {
                         error("Login unsuccessful!")
                     }

@@ -259,6 +259,14 @@ impl Dao {
 
     // *** GET LIST:
 
+    pub async fn get_entrepreneurs(&self, account_id: u32) -> DaoResult<Vec<Entrepreneur>> {
+        use schema::entrepreneurs::dsl as table;
+
+        self.with_connection(|conn| table::entrepreneurs.filter(table::account_id.eq(account_id as i32)).load(conn))
+            .await
+            .map_err(Self::map_db_error)
+    }
+
     pub async fn get_contacts(&self, entrepreneur_id: u32) -> DaoResult<Vec<Contact>> {
         use schema::contacts::dsl as table;
 

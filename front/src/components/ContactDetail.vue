@@ -43,7 +43,6 @@ export default {
     components: {},
     mounted() {
         this.ajax("data-get/contact/" + this.$route.params.id, {}).then(r => {
-            console.log("R: " + JSON.stringify(r));
             this.contactData = r
 
             switch (this.contactData.vat) {

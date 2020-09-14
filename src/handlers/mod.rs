@@ -163,6 +163,18 @@ pub async fn get_contact(id: web::Path<u32>, session: LoginSession, ctx: web::Da
     .await
 }
 
+#[post("/data-get/entrepreneurs")]
+pub async fn list_entrepreneurs(session: LoginSession, ctx: web::Data<RequestContext>) -> impl Responder {
+    debug!("Getting entrepreneurs list for account ID {}", session.account_id);
+
+    // no access rights check
+
+    with_ok(ctx.dao.get_entrepreneurs(session.account_id), |rows| async {
+        HttpResponse::Ok().json::<Vec<dto::Entrepreneur>>(rows.into_iter().map(|r| r.into()).collect())
+    })
+    .await
+}
+
 #[post("/data-get/contacts/{id}")]
 pub async fn list_contacts(entrepreneur_id: web::Path<u32>, session: LoginSession, ctx: web::Data<RequestContext>) -> impl Responder {
     debug!("Getting contacts list for entrepreneur ID {}", entrepreneur_id);

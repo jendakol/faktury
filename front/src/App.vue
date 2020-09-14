@@ -18,13 +18,13 @@ export default {
         LoginForm
     },
     mounted() {
-        console.log('Loading saved login')
+        // console.log('Loading saved login')
 
         let savedLogin = this.getLoggedSession();
         let savedEntrepreneur = this.$storage.get('entrepreneur');
 
-        if (savedLogin != null) console.log("Saved login: " + JSON.stringify(savedLogin))
-        if (savedEntrepreneur != null) console.log("Saved entrepreneur: " + JSON.stringify(savedEntrepreneur))
+        // if (savedLogin != null) console.log("Saved login: " + JSON.stringify(savedLogin))
+        // if (savedEntrepreneur != null) console.log("Saved entrepreneur: " + JSON.stringify(savedEntrepreneur))
 
         if (savedLogin != null) {
             this.$store.commit('login', savedLogin.accountId)
@@ -43,7 +43,7 @@ export default {
     methods: {
         refreshLoginState: function () {
             let userId = this.$store.state.loggedUserId;
-            if (userId > 0) console.log('User id: ' + userId)
+            // if (userId > 0) console.log('User id: ' + userId)
             this.clientStatus = userId > 0 ? "READY" : "LOGGED-OUT"
         },
     },
