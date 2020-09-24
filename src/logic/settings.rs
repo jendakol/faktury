@@ -1,6 +1,7 @@
 use std::ops::Deref;
 
 use chrono::Duration;
+use log::trace;
 use serde::{Deserialize, Serialize};
 
 use crate::dao::Account;
@@ -14,9 +15,10 @@ pub struct AccountSettings {
 
 impl From<&Account> for AccountSettings {
     fn from(account: &Account) -> Self {
-        let account_settings_str = if account.settings.is_empty() {
+        let account_settings_str = if !account.settings.is_empty() {
             account.settings.as_str()
         } else {
+            trace!("No account settings, defaulting to empty");
             "{}" // a default, empty json
         };
 

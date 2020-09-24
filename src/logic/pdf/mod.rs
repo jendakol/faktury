@@ -9,7 +9,7 @@ use chrono::NaiveDate;
 use err_context::AnyError;
 use futures::channel::mpsc;
 use futures::{SinkExt, StreamExt};
-use log::debug;
+use log::{debug, trace};
 use printpdf::*;
 
 use crate::dao::{Contact, Entrepreneur, Invoice, InvoiceRow, Vat};
@@ -104,6 +104,8 @@ impl PdfCreator {
         invoice: Invoice,
         invoice_rows: Vec<InvoiceRow>,
     ) -> Result<PdfDocumentReference, AnyError> {
+        trace!("Using account settings: {:?}", settings);
+
         let font_calibri_light = self.load_font("CalibriLight")?;
         let font_calibri_bold = self.load_font("CalibriBold")?;
 
