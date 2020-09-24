@@ -847,6 +847,7 @@ dependencies = [
  "humantime",
  "iban_validate",
  "log",
+ "percent-encoding 2.1.0",
  "printpdf",
  "qrcode-generator",
  "serde 1.0.115",

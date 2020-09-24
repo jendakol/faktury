@@ -106,6 +106,10 @@
                 </v-card>
             </v-container>
         </v-card-text>
+
+        <form ref="DownloadForm" :action="downloadUrl" method="POST">
+            <input type="hidden" name="auth" :value="$storage.get('login-session')">
+        </form>
     </v-card>
 </template>
 
@@ -214,7 +218,7 @@ export default {
             });
         },
         downloadInvoice: function () {
-            window.location.href = this.hostUrl + "/download/" + this.$route.params.id
+            this.$refs.DownloadForm.submit()
         },
         rowUpdated: function (updatedRow) {
             let newRows = this.lodash.map(this.invoiceRows, function (row) {
@@ -236,6 +240,11 @@ export default {
             console.log("Inserted new invoice row:" + JSON.stringify(row))
 
             this.$set(this, 'invoiceRows', this.lodash.concat(this.invoiceRows, row))
+        }
+    },
+    computed: {
+        downloadUrl: function () {
+            return this.hostUrl + "/download/" + this.$route.params.id + "?auth=1"
         }
     }
 }

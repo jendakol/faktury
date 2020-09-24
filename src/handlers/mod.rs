@@ -9,7 +9,7 @@ use actix_web::{get, post, web, FromRequest, HttpRequest, HttpResponse, Responde
 use err_context::AnyError;
 use futures::future::{err, ok};
 use futures::FutureExt;
-use log::{debug, warn};
+use log::{debug, trace, warn};
 use serde::Deserialize;
 
 use crate::dao::DaoResult;
@@ -26,7 +26,7 @@ use crate::RequestContext;
 
 mod dto;
 
-#[get("/download/{id}")]
+#[post("/download/{id}")]
 pub async fn download_invoice(id: web::Path<u32>, session: LoginSession, ctx: web::Data<RequestContext>) -> impl Responder {
     if !(session.is_valid_for_invoice(&ctx.dao, *id).await) {
         debug!("Session {:?} is forbidden to access invoice id {}", session, *id);
@@ -487,39 +487,41 @@ impl FromRequest for LoginSession {
     type Future = Pin<Box<dyn futures::Future<Output = Result<Self, Self::Error>>>>;
     type Config = LoginSessionExtractorConfig;
 
-    fn from_request(req: &HttpRequest, _payload: &mut Payload<PayloadStream>) -> Self::Future {
+    fn from_request(req: &HttpRequest, payload: &mut Payload<PayloadStream>) -> Self::Future {
         let config = req.app_data::<LoginSessionExtractorConfig>().expect("Could not extract config");
         let ctx = config.ctx.as_ref().expect("Request config not available").clone();
+        use futures::StreamExt;
 
-        if let Some(header) = req.headers().get("X-Faktury-Auth") {
-            match LoginSession::extract_header_value(header) {
-                Ok(session) => async move {
-                    let found_session = ctx
-                        .dao
-                        .find_session(&session.id)
-                        .await
-                        .expect("Search for existing session has failed")
-                        .map(Into::<LoginSession>::into);
+        if req.query_string().contains("auth=1") {
+            let mut payload = payload.take();
 
-                    match found_session {
-                        Some(db_session) if db_session == session => {
-                            debug!("Authenticated session: {:?}", session);
-                            ok(session)
-                        }
-                        Some(db_session) => {
-                            debug!("Session found but mismatch: {:?} vs {:?}", session, db_session);
-                            err(actix_web::error::ErrorUnauthorized("Invalid auth provided"))
-                        }
-                        None => {
-                            debug!("Could not find provided session {:?}", session);
-                            err(actix_web::error::ErrorUnauthorized("Invalid auth provided"))
-                        }
-                    }
-                    .await
+            async move {
+                debug!("Trying authentication via body");
+                let mut bytes = web::BytesMut::new();
+                while let Some(item) = payload.next().await {
+                    let item = item?;
+                    trace!("Chunk: {:?}", &item);
+                    bytes.extend_from_slice(&item);
                 }
-                .boxed_local(),
+                let bytes = bytes.to_vec();
+                let auth = String::from_utf8(bytes).map_err(|e| e.utf8_error())?;
+                debug!("Provided session: {}", auth);
+
+                match LoginSession::try_parse_from_body(&auth) {
+                    Ok(session) => LoginSession::try_authenticate(ctx, session),
+                    Err(e) => {
+                        debug!("Could not authenticate via body token: {:?}", e);
+                        Box::pin(err(actix_web::error::ErrorUnauthorized("Invalid auth provided")))
+                    }
+                }
+                .await
+            }
+            .boxed_local()
+        } else if let Some(header) = req.headers().get("X-Faktury-Auth") {
+            match LoginSession::try_parse_from_header(header) {
+                Ok(session) => LoginSession::try_authenticate(ctx, session),
                 Err(e) => {
-                    debug!("Could not authenticate: {:?}", e);
+                    debug!("Could not authenticate via header: {:?}", e);
                     Box::pin(err(actix_web::error::ErrorUnauthorized("Invalid auth provided")))
                 }
             }
@@ -535,10 +537,58 @@ pub struct LoginSessionExtractorConfig {
 }
 
 impl LoginSession {
-    fn extract_header_value(header: &HeaderValue) -> Result<LoginSession, AnyError> {
+    fn try_parse_from_header(header: &HeaderValue) -> Result<LoginSession, AnyError> {
         let str = header.to_str()?;
-        let decoded = base64::decode(str)?;
+        LoginSession::try_parse(str)
+    }
+
+    fn try_parse_from_body(value: &str) -> Result<LoginSession, AnyError> {
+        use percent_encoding::percent_decode_str;
+
+        let value = value
+            .strip_prefix("auth=")
+            .ok_or_else(|| AnyError::from("Could not handle provided auth token"))?;
+
+        // url decode
+        let value = percent_decode_str(value).decode_utf8()?;
+
+        LoginSession::try_parse(value.as_ref())
+    }
+
+    fn try_parse(value: &str) -> Result<LoginSession, AnyError> {
+        let decoded = base64::decode(value)?;
         let result = serde_json::from_slice(decoded.as_slice())?;
         Ok(result)
+    }
+
+    fn try_authenticate(
+        ctx: RequestContext,
+        session: LoginSession,
+    ) -> Pin<Box<dyn Future<Output = Result<LoginSession, actix_web::Error>>>> {
+        async move {
+            let found_session = ctx
+                .dao
+                .find_session(&session.id)
+                .await
+                .expect("Search for existing session has failed")
+                .map(Into::<LoginSession>::into);
+
+            match found_session {
+                Some(db_session) if db_session == session => {
+                    debug!("Authenticated session: {:?}", session);
+                    ok(session)
+                }
+                Some(db_session) => {
+                    debug!("Session found but mismatch: {:?} vs {:?}", session, db_session);
+                    err(actix_web::error::ErrorUnauthorized("Invalid auth provided"))
+                }
+                None => {
+                    debug!("Could not find provided session {:?}", session);
+                    err(actix_web::error::ErrorUnauthorized("Invalid auth provided"))
+                }
+            }
+            .await
+        }
+        .boxed_local()
     }
 }
