@@ -1,5 +1,4 @@
 use std::future::Future;
-use std::ops::Deref;
 use std::pin::Pin;
 
 use actix_web::body::BodyStream;
@@ -20,11 +19,9 @@ use crate::handlers::dto::{
 };
 use crate::logic;
 use crate::logic::auth::Auth;
-use crate::logic::invoices as InvoicesLogic;
-use crate::logic::settings::AccountSettings;
 use crate::RequestContext;
 
-mod dto;
+pub mod dto;
 
 #[post("/download/{id}")]
 pub async fn download_invoice(id: web::Path<u32>, session: LoginSession, ctx: web::Data<RequestContext>) -> impl Responder {
@@ -264,8 +261,6 @@ pub async fn insert_contact(contact: web::Json<NewContact>, session: LoginSessio
 
 #[post("/data-insert/invoice")]
 pub async fn insert_invoice(invoice: web::Json<NewInvoice>, session: LoginSession, ctx: web::Data<RequestContext>) -> impl Responder {
-    use InvoicesLogic::next_code;
-
     debug!("Inserting new invoice: {:?}", invoice);
 
     if !(session.is_valid_for_entrepreneur(&ctx.dao, invoice.entrepreneur_id).await
@@ -278,31 +273,8 @@ pub async fn insert_invoice(invoice: web::Json<NewInvoice>, session: LoginSessio
         return HttpResponse::Forbidden().body("Invalid resource");
     }
 
-    with_found(ctx.dao.get_account(invoice.account_id), |account| async {
-        let settings = AccountSettings::from(&account);
-
-        debug!("Loaded user settings: {:?}", settings);
-
-        let invoice_code = match next_code(&ctx.dao, settings.invoice.naming_schema).await {
-            Ok(code) => code,
-            Err(err) => {
-                warn!("Could not generate invoice id: {}", err);
-                return HttpResponse::InternalServerError().body("Could not generate invoice id");
-            }
-        };
-
-        drop(account); // TODO WTF
-
-        with_ok(
-            ctx.dao.insert_invoice(
-                &invoice_code,
-                invoice.entrepreneur_id,
-                invoice.contact_id,
-                settings.invoice.default_due_length.deref(),
-            ),
-            |i| async { HttpResponse::Ok().json::<dto::InvoiceWithAllInfo>(i.into()) },
-        )
-        .await
+    with_ok(logic::insert_invoice(&ctx.dao, &invoice), |i| async {
+        HttpResponse::Ok().json::<dto::InvoiceWithAllInfo>(i.into())
     })
     .await
 }

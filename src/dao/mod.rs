@@ -6,7 +6,7 @@ use std::sync::{Arc, Mutex};
 use chrono::{Duration, NaiveDateTime as DateTime};
 use diesel::backend::Backend;
 use diesel::deserialize::FromSql;
-use diesel::dsl::max;
+use diesel::expression::dsl::count;
 use diesel::mysql::MysqlConnection;
 use diesel::prelude::*;
 use diesel::r2d2::{ConnectionManager, Pool, PooledConnection};
@@ -534,16 +534,16 @@ impl Dao {
 
     // *** OTHERS:
 
-    pub async fn get_invoices_max_id(&self, ent_id: u32) -> DaoResult<i32> {
+    pub async fn get_invoices_max_id(&self, entrepreneur: &Entrepreneur) -> DaoResult<u32> {
         self.with_connection(|conn| {
             use schema::*;
 
             invoices::table
-                .select(max(invoices::id))
-                .filter(invoices::entrepreneur_id.eq(ent_id as i32))
-                .first::<Option<i32>>(conn)
+                .select(count(invoices::id))
+                .filter(invoices::entrepreneur_id.eq(entrepreneur.id))
+                .first::<i64>(conn)
+                .map(|c| c as u32) // this looks dangerous, but I believe there won't be more invoices than 2^32...
                 .map_err(Self::map_db_error)
-                .map(|r| r.unwrap_or(0)) // no at all, default to 0
         })
         .await
     }

@@ -1,10 +1,14 @@
 use actix_web::web::Bytes;
 use err_context::AnyError;
+use log::{debug, warn};
 
 use pdf::PdfManager;
 use settings::AccountSettings;
+use InvoicesLogic::next_code;
 
-use crate::dao::{Dao, Invoice};
+use crate::dao::{Dao, DaoResult, Invoice, InvoiceWithAllInfo};
+use crate::handlers::dto::NewInvoice;
+use crate::logic::invoices as InvoicesLogic;
 
 pub mod auth;
 pub mod iban;
@@ -40,4 +44,38 @@ pub async fn download_invoice(
         invoice.clone(),
         pdf_manager.create(account_settings, entrepreneur, contact, invoice, rows),
     ))
+}
+
+pub async fn insert_invoice(dao: &Dao, invoice: &NewInvoice) -> DaoResult<InvoiceWithAllInfo> {
+    let entrepreneur = dao
+        .get_entrepreneur(invoice.entrepreneur_id as u32)
+        .await?
+        .expect("This value must exist!");
+
+    let account = dao
+        .get_account(entrepreneur.account_id as u32)
+        .await?
+        .expect("This value must exist!");
+
+    let settings = AccountSettings::from(&account);
+
+    debug!("Loaded user settings: {:?}", settings);
+
+    let invoice_code = match next_code(dao, &account, &entrepreneur, settings.invoice.naming_schema).await {
+        Ok(code) => code,
+        Err(err) => {
+            warn!("Could not generate invoice id: {}", err);
+            return Err(AnyError::from("Could not generate invoice id"));
+        }
+    };
+
+    // TODO handle duplicated code
+
+    dao.insert_invoice(
+        &invoice_code,
+        invoice.entrepreneur_id,
+        invoice.contact_id,
+        &settings.invoice.default_due_length,
+    )
+    .await
 }
