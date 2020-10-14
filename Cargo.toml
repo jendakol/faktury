@@ -23,6 +23,7 @@ futures = "~0.3"
 frunk = "~0.3"
 frunk_core = "~0.3"
 chrono = { version = "~0.4", features = ["serde", "rustc-serialize"] }
+itertools = "~0.9"
 log = "~0.4"
 qrcode-generator = "~1.0"
 percent-encoding = "~2.1"

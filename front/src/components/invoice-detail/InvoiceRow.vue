@@ -1,7 +1,7 @@
 <template>
     <v-row class="pl-3 pr-3">
         <v-col cols="8">
-            <v-text-field label="Item name" v-model="name" counter="200" :rules="rules.name"/>
+            <v-textarea label="Item name" rows="2" v-model="name" counter="400" :rules="rules.name"/>
         </v-col>
         <v-col cols="2">
             <v-currency-field
@@ -97,6 +97,9 @@
         methods: {
             saveRow: function (id) {
                 // TODO validation
+
+                this.data.item_name = this.data.item_name.replace("\n", "\r\n").replace("\r\r\n", "\r\n")
+
                 console.log("Save invoice row: ")
                 console.log(this.data)
 

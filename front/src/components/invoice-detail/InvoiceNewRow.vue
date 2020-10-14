@@ -1,7 +1,7 @@
 <template>
     <v-row class="pl-3 pr-3">
         <v-col cols="8">
-            <v-text-field label="New item name" v-model="name" counter="200" :rules="rules.name"/>
+            <v-textarea label="New item name" rows="2" v-model="name" counter="400" :rules="rules.name"/>
         </v-col>
         <v-col cols="2">
             <v-currency-field
@@ -64,7 +64,7 @@
             addRow: function () {
                 let row = {
                     invoiceId: parseInt(this.invoiceId, 10),
-                    itemName: this.name,
+                    itemName: this.name.replace("\n", "\r\n").replace("\r\r\n", "\r\n"),
                     itemPrice: parseFloat(this.price),
                     itemCount: parseInt(this.count)
                 };

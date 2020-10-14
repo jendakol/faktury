@@ -9,6 +9,7 @@ use chrono::NaiveDate;
 use err_context::AnyError;
 use futures::channel::mpsc;
 use futures::{SinkExt, StreamExt};
+use itertools::Itertools;
 use log::{debug, trace};
 use printpdf::*;
 
@@ -348,15 +349,34 @@ impl PdfCreator {
         for row in invoice_rows {
             let price = row.item_count as f32 * row.item_price;
 
-            layer.use_text(&row.item_name, 10, Mm(offset_left), Mm(offset_bottom), &font);
-            layer.use_text(
-                format!("{} {:03} Kč", price as u16 / 1000, price as u16 % 1000), // TODO hard code value
-                10,
-                Mm(PAPER_WIDTH - PAPER_BORDER - Self::price_width(price)),
-                Mm(offset_bottom),
-                &font,
-            );
-            offset_bottom += LINE_SPACE;
+            let mut item_name_rows = row.item_name.split("\r\n").collect_vec();
+            item_name_rows.reverse(); // because rows are rendered from bottom
+
+            let mut base_row = true;
+            for item_name_row in item_name_rows {
+                layer.use_text(item_name_row, 10, Mm(offset_left), Mm(offset_bottom), &font);
+
+                if base_row {
+                    // TODO hard code value
+                    let formatted = if price >= 1000f32 {
+                        format!("{} {:03} Kč", price as u16 / 1000, price as u16 % 1000)
+                    } else {
+                        format!("{:03} Kč", price as u16 % 1000)
+                    };
+
+                    layer.use_text(
+                        formatted,
+                        10,
+                        Mm(PAPER_WIDTH - PAPER_BORDER - Self::price_width(price)),
+                        Mm(offset_bottom),
+                        &font,
+                    );
+
+                    base_row = false;
+                }
+
+                offset_bottom += LINE_SPACE;
+            }
         }
 
         let line = Line {
@@ -481,7 +501,7 @@ impl PdfCreator {
         } else if price >= 1_000f32 {
             11.8
         } else {
-            10.8
+            9.2
         }
     }
 
@@ -497,10 +517,8 @@ impl PdfCreator {
             tmp.push(c);
 
             // add space each after each third char
-            if i % 3 == 0 {
-                if c != '+' {
-                    tmp.push(' ');
-                }
+            if i % 3 == 0 && c != '+' {
+                tmp.push(' ');
             }
         }
 

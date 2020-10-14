@@ -56,7 +56,7 @@ CREATE TABLE `invoice_rows`
 (
     `id`         INT               NOT NULL AUTO_INCREMENT,
     `invoice_id` INT               NOT NULL,
-    `item_name`  VARCHAR(200)      NOT NULL,
+    `item_name`  VARCHAR(400)      NOT NULL,
     `item_price` FLOAT UNSIGNED    NOT NULL,
     `item_count` SMALLINT UNSIGNED NOT NULL,
     PRIMARY KEY (`id`)
