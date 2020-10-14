@@ -36,7 +36,7 @@ CREATE TABLE `contacts`
     `address`         VARCHAR(250) NOT NULL,
     `vat`             VARCHAR(50)  NOT NULL,
     PRIMARY KEY (`id`),
-    UNIQUE (`code`, `name`)
+    UNIQUE (`entrepreneur_id`, `code`, `name`)
 ) ENGINE = InnoDB;
 
 CREATE TABLE `invoices`
