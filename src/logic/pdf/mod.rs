@@ -254,6 +254,8 @@ impl PdfCreator {
         let layer = &self.current_layer;
 
         if let Some(phone) = phone {
+            let phone = PdfCreator::split_phone_parts(phone);
+
             layer.use_text(phone, 8, Mm(offset_left + 5.6), Mm(offset_bottom), font);
             self.add_img("icon_phone.bmp", offset_left, offset_bottom - 1.0)?;
             offset_bottom -= LINE_SPACE;
@@ -482,6 +484,29 @@ impl PdfCreator {
             10.8
         }
     }
+
+    fn split_phone_parts(phone: &str) -> String {
+        let mut tmp = Vec::new();
+
+        for (c, i) in phone.chars().rev().zip(1..=phone.len()) {
+            // remove last space of this is the trailing +
+            if c == '+' && i % 3 == 1 {
+                tmp.pop();
+            }
+
+            tmp.push(c);
+
+            // add space each after each third char
+            if i % 3 == 0 {
+                if c != '+' {
+                    tmp.push(' ');
+                }
+            }
+        }
+
+        tmp.reverse();
+        tmp.iter().collect()
+    }
 }
 
 struct BlockingWriter<T>(mpsc::Sender<T>);
@@ -500,5 +525,22 @@ where
 
     fn flush(&mut self) -> io::Result<()> {
         futures::executor::block_on(self.0.flush()).map_err(|e| io::Error::new(io::ErrorKind::Other, e))
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn test_split_phone_parts() {
+        assert_eq!(PdfCreator::split_phone_parts("+420123456789"), String::from("+420 123 456 789"));
+        assert_eq!(PdfCreator::split_phone_parts("+44123456789"), String::from("+44 123 456 789"));
+        assert_eq!(PdfCreator::split_phone_parts("+1123456789"), String::from("+1 123 456 789"));
+        assert_eq!(PdfCreator::split_phone_parts("+1123456789123"), String::from("+1 123 456 789 123"));
+        assert_eq!(
+            PdfCreator::split_phone_parts("+11234567891234"),
+            String::from("+11 234 567 891 234")
+        );
     }
 }
