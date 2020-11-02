@@ -22,6 +22,11 @@ const PAPER_WIDTH: f64 = 210.0;
 const PAPER_BORDER: f64 = 20.0;
 const LINE_SPACE: f64 = 5.25;
 
+const WIDTH_NUMBER: f64 = 1.8;
+const WIDTH_SPACE: f64 = 0.75;
+const WIDTH_DOT: f64 = 0.8;
+const WIDTH_CURR_SYMBOL: f64 = 3.2; // TODO for hardcoded Kč
+
 mod qrcode;
 
 #[derive(Debug, Clone)]
@@ -328,17 +333,23 @@ impl PdfCreator {
 
         let layer = &self.current_layer;
 
-        let total_price = invoice_rows.iter().fold(0f32, |tp, r| tp + r.item_count as f32 * r.item_price);
+        let (total_price, use_decs) = invoice_rows.iter().fold((0f64, false), |(tp, decs), r| {
+            let row_price = r.item_count as f64 * r.item_price as f64;
+            let decs = decs || row_price % 1.0 != 0.0;
+            (tp + row_price, decs)
+        });
 
         let line = vec![
             (Point::new(Mm(offset_left), Mm(offset_bottom + 6.0)), false),
             (Point::new(Mm(PAPER_WIDTH - PAPER_BORDER), Mm(offset_bottom + 6.0)), false),
         ];
 
+        let total_price_formatted = PdfCreator::format_price(total_price, use_decs);
+
         layer.use_text(
-            format!("{} {:03} Kč", total_price as u16 / 1000, total_price as u16 % 1000), // TODO hard code value
+            format!("{} Kč", total_price_formatted), // TODO hard code value
             10,
-            Mm(PAPER_WIDTH - PAPER_BORDER - Self::price_width(total_price)),
+            Mm(PAPER_WIDTH - PAPER_BORDER - Self::price_width(&total_price_formatted) - WIDTH_SPACE - WIDTH_CURR_SYMBOL),
             Mm(offset_bottom),
             &font_bold,
         );
@@ -347,7 +358,7 @@ impl PdfCreator {
         invoice_rows.reverse();
 
         for row in invoice_rows {
-            let price = row.item_count as f32 * row.item_price;
+            let price = row.item_count as f64 * row.item_price as f64;
 
             let mut item_name_rows = row.item_name.split("\r\n").collect_vec();
             item_name_rows.reverse(); // because rows are rendered from bottom
@@ -357,17 +368,14 @@ impl PdfCreator {
                 layer.use_text(item_name_row, 10, Mm(offset_left), Mm(offset_bottom), &font);
 
                 if base_row {
-                    // TODO hard code value
-                    let formatted = if price >= 1000f32 {
-                        format!("{} {:03} Kč", price as u16 / 1000, price as u16 % 1000)
-                    } else {
-                        format!("{:03} Kč", price as u16 % 1000)
-                    };
+                    let price_formatted = PdfCreator::format_price(price, use_decs);
+
+                    let left_align = PAPER_WIDTH - PAPER_BORDER - Self::price_width(&price_formatted) - WIDTH_SPACE - WIDTH_CURR_SYMBOL;
 
                     layer.use_text(
-                        formatted,
+                        format!("{} Kč", price_formatted), // TODO hard code value
                         10,
-                        Mm(PAPER_WIDTH - PAPER_BORDER - Self::price_width(price)),
+                        Mm(left_align),
                         Mm(offset_bottom),
                         &font,
                     );
@@ -495,14 +503,12 @@ impl PdfCreator {
         Ok(())
     }
 
-    fn price_width(price: f32) -> f64 {
-        if price >= 10_000f32 {
-            13.8
-        } else if price >= 1_000f32 {
-            11.8
-        } else {
-            9.2
-        }
+    fn price_width(formatted: &str) -> f64 {
+        formatted.chars().fold(0f64, |sum, c| match c {
+            '.' => sum + WIDTH_DOT,
+            ' ' => sum + WIDTH_SPACE,
+            _ => sum + WIDTH_NUMBER,
+        })
     }
 
     fn split_phone_parts(phone: &str) -> String {
@@ -524,6 +530,23 @@ impl PdfCreator {
 
         tmp.reverse();
         tmp.iter().collect()
+    }
+
+    fn format_price(price: f64, use_decimals: bool) -> String {
+        let prec: usize = if use_decimals { 2 } else { 0 };
+        let places: usize = if use_decimals { 6 } else { 3 }; // 000.00 == 6 chars
+
+        if price < 1_000f64 {
+            format!("{:.prec$}", price, prec = prec)
+        } else if price < 1_000_000f64 {
+            format!("{} {:0p$.prec$}", price as u64 / 1_000, price % 1_000f64, prec = prec, p = places)
+        } else {
+            let mils = price as u64 / 1_000_000;
+            let thousands = (price as u64 % 1000000) / 1_000;
+            let rest = price % 1_000f64;
+
+            format!("{} {:03} {:0p$.prec$}", mils, thousands, rest, prec = prec, p = places)
+        }
     }
 }
 
@@ -560,5 +583,31 @@ mod test {
             PdfCreator::split_phone_parts("+11234567891234"),
             String::from("+11 234 567 891 234")
         );
+    }
+
+    #[test]
+    fn test_format_price() {
+        assert_eq!(PdfCreator::format_price(1.0, false), "1");
+        assert_eq!(PdfCreator::format_price(1.0, true), "1.00");
+
+        assert_eq!(PdfCreator::format_price(100.0, false), "100");
+        assert_eq!(PdfCreator::format_price(100.0, true), "100.00");
+
+        assert_eq!(PdfCreator::format_price(1000.0, false), "1 000");
+        assert_eq!(PdfCreator::format_price(1000.1, true), "1 000.10");
+        assert_eq!(PdfCreator::format_price(1000.12, true), "1 000.12");
+        assert_eq!(PdfCreator::format_price(1000.12, false), "1 000");
+
+        assert_eq!(PdfCreator::format_price(100000.0, false), "100 000");
+        assert_eq!(PdfCreator::format_price(100000.1, true), "100 000.10");
+        assert_eq!(PdfCreator::format_price(100000.12, true), "100 000.12");
+
+        assert_eq!(PdfCreator::format_price(1000000.0, false), "1 000 000");
+        assert_eq!(PdfCreator::format_price(1000456.1, true), "1 000 456.10");
+        assert_eq!(PdfCreator::format_price(1000768.12, true), "1 000 768.12");
+
+        assert_eq!(PdfCreator::format_price(10000000.0, false), "10 000 000");
+        assert_eq!(PdfCreator::format_price(10000000.1, true), "10 000 000.10");
+        assert_eq!(PdfCreator::format_price(10000000.12, true), "10 000 000.12");
     }
 }
