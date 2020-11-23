@@ -86,7 +86,6 @@ let GlobalFunctions = {
         formatVat: function (vatRaw) {
             switch (vatRaw) {
                 case undefined :
-                    console.log("VAT RAW: " + vatRaw)
                     return
                 case "DontDisplay":
                     return ""

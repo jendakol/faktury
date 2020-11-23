@@ -10,11 +10,11 @@ const StateStore = new Vuex.Store({
         locale: "cs-CZ"
     },
     getters: {
-        loggedUserId: function(state) {
+        loggedUserId: function (state) {
             // console.log("Getting user id: " + state.loggedUserId)
             return state.loggedUserId
         },
-        entrepreneurId: function(state) {
+        entrepreneurId: function (state) {
             // console.log("Getting entrepreneur id: " + state.entrepreneurId)
             return state.entrepreneurId
         }

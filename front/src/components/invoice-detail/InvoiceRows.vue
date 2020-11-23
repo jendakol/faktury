@@ -13,30 +13,30 @@
 </template>
 
 <script>
-    import InvoiceRow from "./InvoiceRow";
-    import InvoiceNewRow from "./InvoiceNewRow"
+import InvoiceRow from "./InvoiceRow";
+import InvoiceNewRow from "./InvoiceNewRow"
 
-    export default {
-        name: 'InvoiceRows',
-        components: {
-            InvoiceRow,
-            InvoiceNewRow,
+export default {
+    name: 'InvoiceRows',
+    components: {
+        InvoiceRow,
+        InvoiceNewRow,
+    },
+    props: {
+        invoiceId: Number,
+        rows: Array
+    },
+    methods: {
+        rowUpdated: function (row) {
+            this.$emit('row-updated', row)
         },
-        props: {
-            invoiceId: Number,
-            rows: Array
+        rowDeleted: function (id) {
+            this.$emit('row-deleted', id)
         },
-        methods: {
-            rowUpdated: function (row) {
-                this.$emit('row-updated', row)
-            },
-            rowDeleted: function (id) {
-                this.$emit('row-deleted', id)
-            },
-            rowInserted: function (row) {
-                this.$refs.newRowComponent.reset()
-                this.$emit('row-inserted', row)
-            }
+        rowInserted: function (row) {
+            this.$refs.newRowComponent.reset()
+            this.$emit('row-inserted', row)
         }
     }
+}
 </script>

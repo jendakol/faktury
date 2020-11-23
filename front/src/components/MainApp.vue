@@ -1,10 +1,10 @@
 <template>
     <v-app>
         <v-navigation-drawer
-                app
-                clipped
-                mini-variant
-                expand-on-hover>
+            app
+            clipped
+            mini-variant
+            expand-on-hover>
             <v-list dense>
                 <v-list-item link v-for="item in drawerMenu"
                              :to="item.link"

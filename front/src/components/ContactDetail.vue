@@ -13,13 +13,14 @@
             <v-row>
                 <v-col>
                     <v-select v-if="contactData.vat !== undefined"
-                        :items="vatSelectItems"
-                        v-model="contactData.vat.type"
-                        label="VAT type"
-                        outlined
+                              :items="vatSelectItems"
+                              v-model="contactData.vat.type"
+                              label="VAT type"
+                              outlined
                     ></v-select>
 
-                    <v-text-field v-if="contactData.vat !== undefined && contactData.vat.type === 'Code'" label="VAT code" v-model="contactData.vat.value" counter="100"/>
+                    <v-text-field v-if="contactData.vat !== undefined && contactData.vat.type === 'Code'" label="VAT code"
+                                  v-model="contactData.vat.value" counter="100"/>
                 </v-col>
             </v-row>
             <v-row>

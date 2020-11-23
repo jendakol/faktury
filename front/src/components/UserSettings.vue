@@ -5,16 +5,16 @@
 </template>
 
 <script>
-    export default {
-        name: 'UserSettings',
-        mounted() {
+export default {
+    name: 'UserSettings',
+    mounted() {
 
-        },
-        data() {
-            return {
-                data: {}
-            }
-        },
-        methods: {}
-    }
+    },
+    data() {
+        return {
+            data: {}
+        }
+    },
+    methods: {}
+}
 </script>

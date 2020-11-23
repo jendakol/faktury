@@ -8,16 +8,16 @@
 </template>
 
 <script>
-    import InvoicesTable from "./dashboard/InvoicesTable";
+import InvoicesTable from "./dashboard/InvoicesTable";
 
-    export default {
-        name: 'Dashboard',
-        components: {
-            InvoicesTable
-        },
-        data() {
-            return {}
-        },
-        methods: {}
-    }
+export default {
+    name: 'Dashboard',
+    components: {
+        InvoicesTable
+    },
+    data() {
+        return {}
+    },
+    methods: {}
+}
 </script>
