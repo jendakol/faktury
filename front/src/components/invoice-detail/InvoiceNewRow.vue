@@ -64,7 +64,7 @@
             addRow: function () {
                 let row = {
                     invoiceId: parseInt(this.invoiceId, 10),
-                    itemName: this.name.replace("\n", "\r\n").replace("\r\r\n", "\r\n"),
+                    itemName: this.name.replaceAll("\n", "\r\n").replaceAll("\r\r\n", "\r\n").replaceAll("\r\n\n", "\r\n"),
                     itemPrice: parseFloat(this.price),
                     itemCount: parseInt(this.count)
                 };
@@ -78,7 +78,7 @@
             reset: function () {
                 this.name = "";
                 this.count = 1;
-                this.price = 100;
+                this.price = 1;
             }
         },
     }

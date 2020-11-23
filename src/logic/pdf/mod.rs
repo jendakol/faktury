@@ -426,7 +426,7 @@ impl PdfCreator {
         // TODO hard code value
         layer.use_text("zaplaťte prosím na účet č.", 10, Mm(offset_left), Mm(offset_bottom), &font);
         layer.use_text(
-            format!("{}/{}", account_no, bank_code),
+            format!("{}/{:04}", account_no, bank_code),
             10,
             Mm(offset_left + 37.0),
             Mm(offset_bottom),

@@ -18,7 +18,12 @@ let GlobalFunctions = {
         },
         getLoggedSession: function () {
             if (this.$storage.has('login-session')) {
-                return JSON.parse(atob(this.$storage.get('login-session')))
+                try {
+                    return JSON.parse(atob(this.$storage.get('login-session')))
+                } catch (e) {
+                    console.error(e);
+                    return null;
+                }
             }
 
             return null;

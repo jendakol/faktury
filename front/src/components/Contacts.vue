@@ -106,6 +106,7 @@ export default {
     mounted() {
         this.ajax('data-get/contacts/' + this.getEntrepreneurId()).then(data => {
             this.contacts = data;
+            this.filteredContacts = data;
             this.loading = false;
             this.filterData()
         });
@@ -165,7 +166,7 @@ export default {
             let contact = {
                 code: this.newDialog.code !== "" ? this.newDialog.code : null,
                 name: this.newDialog.name,
-                address: this.newDialog.address,
+                address: this.newDialog.address.replaceAll("\n", "\r\n").replaceAll("\r\r\n", "\r\n").replaceAll("\r\n\n", "\r\n"),
                 entrepreneurId: this.getEntrepreneurId()
             };
 
@@ -179,6 +180,8 @@ export default {
 
             console.log("Adding new contact: ")
             console.log(contact)
+
+            console.log(contact.address)
 
             this.asyncActionWithNotification("data-insert/contact", contact, "Saving", (resp) => new Promise((success, error) => {
                     if (resp.id >= 0) {

@@ -98,7 +98,7 @@
             saveRow: function (id) {
                 // TODO validation
 
-                this.data.itemName = this.data.itemName.replace("\n", "\r\n").replace("\r\r\n", "\r\n")//   tady je bug!!!      Cannot read property 'replace' of undefined
+                this.data.itemName = this.data.itemName.replaceAll("\n", "\r\n").replaceAll("\r\r\n", "\r\n").replaceAll("\r\n\n", "\r\n")//   tady je bug!!!      Cannot read property 'replace' of undefined
 
                 console.log("Save invoice row: ")
                 console.log(this.data)

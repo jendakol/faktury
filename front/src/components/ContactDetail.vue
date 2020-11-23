@@ -12,14 +12,14 @@
             </v-row>
             <v-row>
                 <v-col>
-                    <v-select
+                    <v-select v-if="contactData.vat !== undefined"
                         :items="vatSelectItems"
                         v-model="contactData.vat.type"
                         label="VAT type"
                         outlined
                     ></v-select>
 
-                    <v-text-field v-if="contactData.vat.type === 'Code'" label="VAT code" v-model="contactData.vat.value" counter="100"/>
+                    <v-text-field v-if="contactData.vat !== undefined && contactData.vat.type === 'Code'" label="VAT code" v-model="contactData.vat.value" counter="100"/>
                 </v-col>
             </v-row>
             <v-row>
@@ -73,18 +73,22 @@ export default {
     },
     methods: {
         save: function () {
-            this.contactData.address = this.contactData.address.replace("\n", "\r\n").replace("\r\r\n", "\r\n")
+            this.contactData.address = this.contactData.address.replaceAll("\n", "\r\n").replaceAll("\r\r\n", "\r\n").replaceAll("\r\n\n", "\r\n")
 
             // TODO check for invalid values!
 
             let data = Object.assign({}, this.contactData)
 
-            switch (data.vat.type) {
-                case "Code":
-                    data.vat = {Code: data.vat.value}
-                    break
-                default:
-                    data.vat = data.vat.type
+            if (data.vat !== undefined) {
+                switch (data.vat.type) {
+                    case "Code":
+                        data.vat = {Code: data.vat.value}
+                        break
+                    default:
+                        data.vat = data.vat.type
+                }
+            } else {
+                data.vat = "DontDisplay"
             }
 
             data.code = data.code !== "" ? data.code : null // empty to null

@@ -18,6 +18,7 @@ pub struct Account {
 pub struct Contact {
     pub id: i32,
     pub entrepreneur_id: i32,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub code: Option<String>,
     pub name: String,
     pub address: String,
@@ -34,10 +35,13 @@ pub struct Entrepreneur {
     pub address: String,
     pub vat: Vat,
     pub account_number_country_code: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub account_number_prefix: Option<i16>,
     pub account_number: i64,
     pub account_bank_code: i16,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub email: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub phone: Option<String>,
     pub currency_code: String,
 }

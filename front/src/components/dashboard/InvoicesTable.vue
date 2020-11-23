@@ -10,11 +10,7 @@
                 <v-row class="invoice-row">
                     <v-col cols="2" class="col-code">{{invoice.code}}</v-col>
                     <v-col cols="3" class="col-created">{{formatDate(invoice.created)}}</v-col>
-                    <v-col cols="3" class="col-contact">
-                        <router-link :to="{ name: 'ContactDetail', params: { id: invoice.contactId } }">
-                            {{invoice.contactName}}
-                        </router-link>
-                    </v-col>
+                    <v-col cols="3" class="col-contact">{{invoice.contactName}}</v-col>
                     <v-spacer/>
                     <v-col cols="2" class="col-price">{{Number((invoice.priceSum).toFixed(2))}} Kč</v-col>
                     <v-col cols="1">

@@ -42,15 +42,16 @@
                 }
             }
         },
+        mounted() {
+            this.loadContacts()
+        },
         methods: {
             show: function () {
                 console.log("Showing contacts dialog")
                 this.model = null
                 this.dialog.shown = true
-            }
-        },
-        watch: {
-            search() {
+            },
+            loadContacts() {
                 // Items have already been loaded
                 if (this.contacts.length > 0) return
 
@@ -62,6 +63,11 @@
                 this.ajax("data-get/contacts/" + this.getEntrepreneurId(), {}).then(r => {
                     this.contacts = r
                 }).finally(() => (this.contactsLoading = false))
+            }
+        },
+        watch: {
+            search() {
+                this.loadContacts()
             },
             model(value) {
                 if (this.model != null) {
