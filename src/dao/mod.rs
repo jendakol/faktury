@@ -7,6 +7,7 @@ use chrono::{Duration, NaiveDateTime as DateTime};
 use diesel::backend::Backend;
 use diesel::deserialize::FromSql;
 use diesel::expression::dsl::count;
+use diesel::expression::sql_literal::sql;
 use diesel::mysql::MysqlConnection;
 use diesel::prelude::*;
 use diesel::r2d2::{ConnectionManager, Pool, PooledConnection};
@@ -553,15 +554,16 @@ impl Dao {
 
     // *** OTHERS:
 
-    pub async fn get_invoices_max_id(&self, entrepreneur: &Entrepreneur) -> DaoResult<u32> {
+    pub async fn get_invoices_count(&self, entrepreneur: &Entrepreneur) -> DaoResult<u64> {
         self.with_connection(|conn| {
-            use schema::*;
+            use schema::invoices::dsl as table;
 
-            invoices::table
-                .select(count(invoices::id))
-                .filter(invoices::entrepreneur_id.eq(entrepreneur.id))
+            table::invoices
+                .select(count(table::id))
+                .filter(table::entrepreneur_id.eq(entrepreneur.id))
+                .filter(sql("YEAR(invoices.created) = YEAR(NOW())"))
                 .first::<i64>(conn)
-                .map(|c| c as u32) // this looks dangerous, but I believe there won't be more invoices than 2^32...
+                .map(|c| c as u64)
                 .map_err(Self::map_db_error)
         })
         .await

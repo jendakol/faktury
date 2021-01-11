@@ -46,7 +46,7 @@ mod inner {
     #[async_trait]
     impl InvoiceNamingSchema for DefaultInvoiceNaming {
         async fn next_code(dao: &Dao, _account: &Account, entrepreneur: &Entrepreneur) -> Result<String, AnyError> {
-            let max_id = dao.get_invoices_max_id(entrepreneur).await?;
+            let max_id = dao.get_invoices_count(entrepreneur).await?;
             let next_id = max_id + 1;
 
             let now = Local::now();
