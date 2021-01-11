@@ -294,6 +294,24 @@ pub async fn insert_invoice(invoice: web::Json<NewInvoice>, session: LoginSessio
     .await
 }
 
+#[post("/data-copy/invoice/{id}")]
+pub async fn copy_invoice(invoice_id: web::Path<u32>, session: LoginSession, ctx: web::Data<RequestContext>) -> impl Responder {
+    debug!("Copying invoice: {:?}", invoice_id);
+
+    if !(session.is_valid_for_invoice(&ctx.dao, *invoice_id).await) {
+        debug!("Session {:?} is forbidden to copy invoice id {}", session, *invoice_id);
+        return HttpResponse::Forbidden().body("Invalid resource");
+    }
+
+    with_found(ctx.dao.get_invoice(*invoice_id), |(original, _, _)| async {
+        with_ok(logic::copy_invoice(&ctx.dao, original), |i| async {
+            HttpResponse::Ok().json::<dto::Invoice>(i.into())
+        })
+        .await
+    })
+    .await
+}
+
 #[post("/data-insert/invoice-row")]
 pub async fn insert_invoice_row(row: web::Json<NewInvoiceRow>, session: LoginSession, ctx: web::Data<RequestContext>) -> impl Responder {
     debug!("Inserting new invoice row: {:?}", row);

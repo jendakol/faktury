@@ -9,11 +9,11 @@
             <v-card-text>
                 <v-row class="invoice-row">
                     <v-col cols="2" class="col-code">{{ invoice.code }}</v-col>
-                    <v-col cols="3" class="col-created">{{ formatDate(invoice.created) }}</v-col>
+                    <v-col cols="2" class="col-created">{{ formatDate(invoice.created) }}</v-col>
                     <v-col cols="3" class="col-contact">{{ invoice.contactName }}</v-col>
                     <v-spacer/>
                     <v-col cols="2" class="col-price">{{ Number((invoice.priceSum).toFixed(2)) }} Kč</v-col>
-                    <v-col cols="1">
+                    <v-col cols="2">
                         <v-tooltip top>
                             <template v-slot:activator="{ on, attrs }">
                                 <v-btn icon v-bind="attrs" v-on="on" @click.stop.prevent="deleteInvoice(invoice.id)">
@@ -21,6 +21,14 @@
                                 </v-btn>
                             </template>
                             <span>Delete invoice {{ invoice.code }}</span>
+                        </v-tooltip>
+                        <v-tooltip top>
+                            <template v-slot:activator="{ on, attrs }">
+                                <v-btn icon v-bind="attrs" v-on="on" @click.stop.prevent="copyInvoice(invoice.id)">
+                                    <v-icon color="silver lighten-1">mdi-content-copy</v-icon>
+                                </v-btn>
+                            </template>
+                            <span>Copy invoice {{ invoice.code }}</span>
                         </v-tooltip>
                     </v-col>
                 </v-row>
@@ -113,6 +121,19 @@ export default {
                     },
                 ]
             });
+        },
+        copyInvoice: function (id) {
+            console.log("Copying invoice " + id)
+
+            this.asyncActionWithNotification("data-copy/invoice/" + id, {}, "Saving", (resp) => new Promise((success, error) => {
+                    if (resp.id >= 0) {
+                        success("Invoice copied")
+                        this.$router.push({name: 'InvoiceDetail', params: {id: resp.id}})
+                    } else {
+                        error("Could not save invoice")
+                    }
+                })
+            );
         }
     }
 }

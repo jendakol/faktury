@@ -94,6 +94,7 @@ async fn main() {
             .service(handlers::insert_entrepreneur)
             .service(handlers::insert_contact)
             .service(handlers::insert_invoice)
+            .service(handlers::copy_invoice)
             .service(handlers::insert_invoice_row)
             .service(handlers::update_entrepreneur)
             .service(handlers::update_contact)
