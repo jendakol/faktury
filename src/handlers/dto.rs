@@ -105,6 +105,19 @@ pub struct LoginSessionCreated {
     pub ttl: u64,
 }
 
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct InvoicesListParams {
+    pub last: Option<u16>,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct ContactsListParams {
+    pub count: Option<u16>,
+    pub last_months: Option<u8>,
+}
+
 // ****** New*:
 
 #[derive(Deserialize, Debug)]

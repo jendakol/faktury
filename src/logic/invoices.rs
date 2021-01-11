@@ -51,7 +51,7 @@ mod inner {
 
             let now = Local::now();
 
-            // TODO make the format better
+            // TODO next_id % 100?
 
             let code = format!("{}{:02}{:02}", now.year(), now.month(), next_id);
 

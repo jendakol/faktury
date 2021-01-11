@@ -17,7 +17,7 @@
 </template>
 
 <script>
-import InvoicesTable from "./dashboard/InvoicesTable";
+import InvoicesTable from "./InvoicesTable";
 import ContactsDialog from "./ContactsDialog";
 
 export default {

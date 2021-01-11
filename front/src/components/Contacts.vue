@@ -17,9 +17,17 @@
                 :to="{ name: 'ContactDetail', params: { id: contact.id } }">
             <v-row class="pl-3 pr-3 contact-row">
                 <v-col cols="3" class="col-name">{{ contact.name }}</v-col>
-                <v-col cols="3" class="col-code">{{ contact.code }}</v-col>
+                <v-col cols="2" class="col-code">{{ contact.code }}</v-col>
                 <v-col cols="5" class="col-addr">{{ contact.address }}</v-col>
-                <v-col cols="1">
+                <v-col cols="2" align="right">
+                    <v-tooltip top>
+                        <template v-slot:activator="{ on, attrs }">
+                            <v-btn icon v-bind="attrs" v-on="on" @click.stop.prevent="newInvoice(contact.id)">
+                                <v-icon color="green lighten-1">mdi-text-box-plus</v-icon>
+                            </v-btn>
+                        </template>
+                        <span>Create new invoice for {{ contact.name }}</span>
+                    </v-tooltip>
                     <v-tooltip top>
                         <template v-slot:activator="{ on, attrs }">
                             <v-btn icon v-bind="attrs" v-on="on" @click.stop.prevent="deleteContact(contact.id)">
@@ -224,6 +232,28 @@ export default {
                     },
                 ]
             });
+        },
+        newInvoice: function (contactId) {
+            console.log("Adding new invoice for contact id " + contactId)
+
+            let invoice = {
+                accountId: this.getUserId(),
+                entrepreneurId: this.getEntrepreneurId(),
+                contactId: contactId
+            };
+
+            console.log("Adding new invoice: ")
+            console.log(invoice)
+
+            this.asyncActionWithNotification("data-insert/invoice", invoice, "Saving", (resp) => new Promise((success, error) => {
+                    if (resp.id >= 0) {
+                        success("Invoice created")
+                        this.$router.push({name: 'InvoiceDetail', params: {id: resp.id}})
+                    } else {
+                        error("Could not save invoice")
+                    }
+                })
+            );
         }
     }
 }

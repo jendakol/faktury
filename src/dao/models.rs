@@ -6,7 +6,8 @@ use crate::dao::Vat;
 
 use super::schema::*;
 
-#[derive(Identifiable, Queryable, Associations, AsChangeset, LabelledGeneric, PartialEq, Debug, Clone)]
+#[derive(Identifiable, Queryable, QueryableByName, Associations, AsChangeset, LabelledGeneric, PartialEq, Debug, Clone)]
+#[table_name = "accounts"]
 pub struct Account {
     pub id: i32,
     pub username: String,
@@ -22,8 +23,9 @@ pub struct NewAccount<'a> {
     pub settings: &'a str,
 }
 
-#[derive(Identifiable, Queryable, Associations, AsChangeset, LabelledGeneric, PartialEq, Debug, Clone)]
+#[derive(Identifiable, Queryable, QueryableByName, Associations, AsChangeset, LabelledGeneric, PartialEq, Debug, Clone)]
 #[belongs_to(Account)]
+#[table_name = "entrepreneurs"]
 pub struct Entrepreneur {
     pub id: i32,
     pub account_id: i32,
@@ -56,8 +58,9 @@ pub struct NewEntrepreneur<'a> {
     pub currency_code: String,
 }
 
-#[derive(Identifiable, Queryable, Associations, AsChangeset, LabelledGeneric, PartialEq, Debug, Clone)]
+#[derive(Identifiable, Queryable, QueryableByName, Associations, AsChangeset, LabelledGeneric, PartialEq, Debug, Clone)]
 #[belongs_to(Entrepreneur)]
+#[table_name = "contacts"]
 pub struct Contact {
     pub id: i32,
     pub entrepreneur_id: i32,
@@ -77,8 +80,9 @@ pub struct NewContact<'a> {
     pub vat: Option<Vat>,
 }
 
-#[derive(Identifiable, Queryable, Associations, AsChangeset, LabelledGeneric, Generic, PartialEq, Debug, Clone)]
+#[derive(Identifiable, Queryable, QueryableByName, Associations, AsChangeset, LabelledGeneric, Generic, PartialEq, Debug, Clone)]
 #[belongs_to(Entrepreneur)]
+#[table_name = "invoices"]
 pub struct Invoice {
     pub id: i32,
     pub entrepreneur_id: i32,
@@ -100,8 +104,9 @@ pub struct NewInvoice<'a> {
     pub payed: Option<Date>,
 }
 
-#[derive(Identifiable, Queryable, Associations, AsChangeset, LabelledGeneric, PartialEq, Debug, Clone)]
+#[derive(Identifiable, Queryable, QueryableByName, Associations, AsChangeset, LabelledGeneric, PartialEq, Debug, Clone)]
 #[belongs_to(Invoice)]
+#[table_name = "invoice_rows"]
 pub struct InvoiceRow {
     pub id: i32,
     pub invoice_id: i32,
@@ -119,8 +124,9 @@ pub struct NewInvoiceRow {
     pub item_count: i16,
 }
 
-#[derive(Identifiable, Queryable, Associations, AsChangeset, LabelledGeneric, PartialEq, Debug, Clone)]
+#[derive(Identifiable, Queryable, QueryableByName, Associations, AsChangeset, LabelledGeneric, PartialEq, Debug, Clone)]
 #[belongs_to(Account)]
+#[table_name = "login_sessions"]
 pub struct LoginSession {
     pub id: String,
     pub account_id: i32,

@@ -14,8 +14,8 @@ use serde::Deserialize;
 use crate::dao::DaoResult;
 pub use crate::handlers::dto::LoginSession;
 use crate::handlers::dto::{
-    Contact, Entrepreneur, Invoice, InvoiceRow, InvoiceWithRows, LoginSessionCreated, NewContact, NewEntrepreneur, NewInvoice,
-    NewInvoiceRow,
+    Contact, ContactsListParams, Entrepreneur, Invoice, InvoiceRow, InvoiceWithRows, InvoicesListParams, LoginSessionCreated, NewContact,
+    NewEntrepreneur, NewInvoice, NewInvoiceRow,
 };
 use crate::logic;
 use crate::logic::auth::Auth;
@@ -173,7 +173,12 @@ pub async fn list_entrepreneurs(session: LoginSession, ctx: web::Data<RequestCon
 }
 
 #[post("/data-get/contacts/{id}")]
-pub async fn list_contacts(entrepreneur_id: web::Path<u32>, session: LoginSession, ctx: web::Data<RequestContext>) -> impl Responder {
+pub async fn list_contacts(
+    entrepreneur_id: web::Path<u32>,
+    session: LoginSession,
+    params: Option<web::Json<ContactsListParams>>,
+    ctx: web::Data<RequestContext>,
+) -> impl Responder {
     debug!("Getting contacts list for entrepreneur ID {}", entrepreneur_id);
 
     if !(session.is_valid_for_entrepreneur(&ctx.dao, *entrepreneur_id).await) {
@@ -181,14 +186,22 @@ pub async fn list_contacts(entrepreneur_id: web::Path<u32>, session: LoginSessio
         return HttpResponse::Forbidden().body("Invalid resource");
     }
 
-    with_ok(ctx.dao.get_contacts(*entrepreneur_id), |rows| async {
+    let limit = params.as_ref().and_then(|p| p.count);
+    let last_months = params.as_ref().and_then(|p| p.last_months);
+
+    with_ok(ctx.dao.get_contacts(*entrepreneur_id, limit, last_months), |rows| async {
         HttpResponse::Ok().json::<Vec<dto::Contact>>(rows.into_iter().map(|r| r.into()).collect())
     })
     .await
 }
 
 #[post("/data-get/invoices/{id}")]
-pub async fn list_invoices(entrepreneur_id: web::Path<u32>, session: LoginSession, ctx: web::Data<RequestContext>) -> impl Responder {
+pub async fn list_invoices(
+    entrepreneur_id: web::Path<u32>,
+    session: LoginSession,
+    params: Option<web::Json<InvoicesListParams>>,
+    ctx: web::Data<RequestContext>,
+) -> impl Responder {
     debug!("Getting invoices list for entrepreneur ID {}", entrepreneur_id);
 
     if !(session.is_valid_for_entrepreneur(&ctx.dao, *entrepreneur_id).await) {
@@ -196,7 +209,9 @@ pub async fn list_invoices(entrepreneur_id: web::Path<u32>, session: LoginSessio
         return HttpResponse::Forbidden().body("Invalid resource");
     }
 
-    with_ok(ctx.dao.get_invoices(*entrepreneur_id), |rows| async {
+    let limit = params.and_then(|p| p.last);
+
+    with_ok(ctx.dao.get_invoices(*entrepreneur_id, limit), |rows| async {
         HttpResponse::Ok().json::<Vec<dto::InvoiceWithAllInfo>>(rows.into_iter().map(|r| r.into()).collect())
     })
     .await

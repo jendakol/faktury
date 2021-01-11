@@ -11,6 +11,7 @@ use diesel::mysql::MysqlConnection;
 use diesel::prelude::*;
 use diesel::r2d2::{ConnectionManager, Pool, PooledConnection};
 use diesel::serialize::{Output, ToSql};
+use diesel::sql_query;
 use diesel::sql_types::VarChar;
 use diesel::{delete, deserialize, insert_into, select, serialize};
 use diesel::{sql_types, update};
@@ -267,27 +268,45 @@ impl Dao {
             .map_err(Self::map_db_error)
     }
 
-    pub async fn get_contacts(&self, entrepreneur_id: u32) -> DaoResult<Vec<Contact>> {
-        use schema::contacts::dsl as table;
+    pub async fn get_contacts(&self, entrepreneur_id: u32, limit: Option<u16>, last_months: Option<u8>) -> DaoResult<Vec<Contact>> {
+        // Here I'm not patient enough to convince Diesel to construct the right query :-( Sorryfor that.
 
-        self.with_connection(|conn| table::contacts.filter(table::entrepreneur_id.eq(entrepreneur_id as i32)).load(conn))
+        let mut sql = format!("select * from contacts where entrepreneur_id = {}", entrepreneur_id);
+
+        if let Some(m) = last_months {
+            sql += &format!(" order by (select count(id) from invoices where invoices.contact_id = contacts.id and invoices.created >= DATE_SUB(NOW(),INTERVAL {} MONTH)) desc", m);
+        } else {
+            sql += "order by name asc";
+        }
+
+        if let Some(c) = limit {
+            sql += &format!(" limit {}", c);
+        }
+
+        self.with_connection(|conn| sql_query(sql).load(conn))
             .await
             .map_err(Self::map_db_error)
     }
 
-    pub async fn get_invoices(&self, entrepreneur_id: u32) -> DaoResult<Vec<InvoiceWithAllInfo>> {
+    pub async fn get_invoices(&self, entrepreneur_id: u32, limit: Option<u16>) -> DaoResult<Vec<InvoiceWithAllInfo>> {
         use schema::*;
 
         self.with_connection(|conn| {
-            invoices::table
+            let query = invoices::table
                 .select((
                     invoices::all_columns,
-                    // This is not exactly nice and type-safe piece of code. However, I'm unable to convince Diesel to create it by his own - I just don't know how. 
+                    // This is not exactly nice and type-safe piece of code. However, I'm unable to convince Diesel to create it by his own - I just don't know how.
                     diesel::dsl::sql::<diesel::sql_types::Double>("ifnull((select sum(invoice_rows.item_price * invoice_rows.item_count) from invoice_rows where invoice_rows.invoice_id=invoices.id), 0)"),
                     diesel::dsl::sql::<diesel::sql_types::VarChar>("(select contacts.name from contacts where contacts.id=invoices.contact_id)"),
                 ))
                 .filter(invoices::entrepreneur_id.eq(entrepreneur_id as i32))
-                .load(conn)
+                .order(invoices::created.desc());
+
+            if let Some(c) = limit {
+                query.limit(c as i64).load(conn)
+            } else {
+                query.load(conn)
+            }
         })
             .await
             .map_err(Self::map_db_error)

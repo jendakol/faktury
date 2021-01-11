@@ -59,8 +59,15 @@ import {SnotifyPosition} from "vue-snotify";
 
 export default {
     name: 'InvoicesTable',
+    props: {
+        last: Number
+    },
     mounted() {
-        this.ajax('data-get/invoices/' + this.getEntrepreneurId()).then(data => {
+        let data = {}
+        if (this.last !== undefined) {
+            data["last"] = parseInt(this.last.toString())
+        }
+        this.ajax('data-get/invoices/' + this.getEntrepreneurId(), data).then(data => {
             this.invoices = data;
             this.loading = false;
         });
@@ -74,7 +81,7 @@ export default {
     methods: {
         formatDate: function (isoString) {
             let date = new Date(isoString)
-            return date.toLocaleString(this.$store.state.locale)
+            return date.toLocaleDateString(this.$store.state.locale)
         },
         deleteInvoice: function (id) {
             this.$snotify.confirm('Really delete this invoice?', 'Delete', {
