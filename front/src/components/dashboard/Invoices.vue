@@ -3,7 +3,7 @@
         <v-card-title>
             <h1 class="faktury-page-header">Your recent invoices</h1>
         </v-card-title>
-        <InvoicesTable last="3"/>
+        <InvoicesTable :last='3'/>
     </v-card>
 </template>
 

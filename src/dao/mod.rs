@@ -277,7 +277,7 @@ impl Dao {
         if let Some(m) = last_months {
             sql += &format!(" order by (select count(id) from invoices where invoices.contact_id = contacts.id and invoices.created >= DATE_SUB(NOW(),INTERVAL {} MONTH)) desc", m);
         } else {
-            sql += "order by name asc";
+            sql += " order by name asc";
         }
 
         if let Some(c) = limit {
@@ -385,7 +385,7 @@ impl Dao {
                     entrepreneur_id: entrepreneur_id as i32,
                     contact_id: contact_id as i32,
                     code,
-                    created: now,
+                    created: None,
                     pay_until,
                     payed: None,
                 };
