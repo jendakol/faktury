@@ -42,12 +42,23 @@ let GlobalFunctions = {
             this.$snotify.async(initialText, () => new Promise((resolve, reject) => {
                 this.ajax(name, data, 60000).then(resp => {
                     responseToPromise(resp)
-                        .then(text => {
+                        .then(d => {
+                            let text;
+                            let timeout;
+
+                            if (typeof d === 'object' && d !== null) {
+                                text = d.text
+                                timeout = d.timeout === undefined ? 3500 : d.timeout
+                            } else {
+                                text = d
+                                timeout = 3500
+                            }
+
                             resolve({
                                 body: text,
                                 config: {
                                     closeOnClick: true,
-                                    timeout: 3500
+                                    timeout: timeout
                                 }
                             })
                         }, errText => {
