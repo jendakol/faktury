@@ -88,7 +88,7 @@ pub struct Invoice {
     pub entrepreneur_id: i32,
     pub contact_id: i32,
     pub code: String,
-    pub created: Datetime,
+    pub created: Date,
     pub pay_until: Date,
     pub payed: Option<Date>,
 }
@@ -99,7 +99,7 @@ pub struct NewInvoice<'a> {
     pub entrepreneur_id: i32,
     pub contact_id: i32,
     pub code: &'a str,
-    pub created: Datetime,
+    pub created: Option<Date>,
     pub pay_until: Date,
     pub payed: Option<Date>,
 }

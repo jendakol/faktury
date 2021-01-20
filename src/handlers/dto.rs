@@ -53,7 +53,7 @@ pub struct Invoice {
     pub entrepreneur_id: i32,
     pub contact_id: i32,
     pub code: String,
-    pub created: Datetime,
+    pub created: Date,
     pub pay_until: Date,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub payed: Option<Date>,
@@ -66,7 +66,7 @@ pub struct InvoiceWithAllInfo {
     pub entrepreneur_id: i32,
     pub contact_id: i32,
     pub code: String,
-    pub created: Datetime,
+    pub created: Date,
     pub pay_until: Date,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub payed: Option<Date>,

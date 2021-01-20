@@ -19,9 +19,9 @@
                                                     <Datetime
                                                         v-model="invoiceData.created"
                                                         type="date"
+                                                        value-zone="local"
                                                         input-class="invoice-datetime" v-bind="attrs"
                                                         v-on="on"
-                                                        width="100%"
                                                     />
                                                 </template>
                                                 <span>Click to change</span>
@@ -38,6 +38,7 @@
                                                     <Datetime
                                                         v-model="invoiceData.payUntil"
                                                         type="date"
+                                                        value-zone="local"
                                                         input-class="invoice-datetime" v-bind="attrs"
                                                         v-on="on"
                                                     />
@@ -56,6 +57,7 @@
                                                     <Datetime
                                                         v-model="invoiceData.payed"
                                                         type="date"
+                                                        value-zone="local"
                                                         input-class="invoice-datetime" v-bind="attrs"
                                                         v-on="on"
                                                     />
@@ -94,7 +96,6 @@
                         <v-spacer/>
                         <v-btn color="orange darken-1" text @click="downloadInvoice">Download</v-btn>
                         <v-btn color="red darken-1" text @click="deleteInvoice">Delete</v-btn>
-                        <v-btn color="green darken-1" text @click="saveMetadata">Save</v-btn>
                     </v-card-actions>
                 </v-card>
                 <br/>
@@ -167,24 +168,35 @@ export default {
         contactSelected: function (contact) {
             this.contactData = contact
             this.invoiceData.contactId = contact.id
+            this.saveMetadata()
         },
         saveMetadata: function () {
+            if (this.loading) return;
+
+            this.loading = true
+
             // fix date formats:
-            this.invoiceData.created = this.invoiceData.created.substring(0, 19)
+            this.invoiceData.created = this.invoiceData.created.substring(0, 10)
             this.invoiceData.payUntil = this.invoiceData.payUntil.substring(0, 10)
             this.invoiceData.payed = this.invoiceData.payed != null ? this.invoiceData.payed.substring(0, 10) : null
 
             console.log("Saving invoice metadata")
             console.log(this.invoiceData)
 
-            this.asyncActionWithNotification("data-update/invoice", this.invoiceData, "Saving", (resp) => new Promise((success, error) => {
-                    if (resp.success) {
-                        success("Invoice saved")
-                    } else {
-                        error("Could not save invoice")
-                    }
-                })
-            );
+
+            this.ajax("data-update/invoice", this.invoiceData).then(r => {
+                if (r.success) {
+                    console.log("Saved!")
+                } else {
+                    this.$snotify.error("Could not save the invoice!", "Saving");
+                }
+
+                this.loading = false
+            }).catch(e => {
+                this.$snotify.error("Could not save the invoice!", "Saving");
+                console.log(e)
+                this.loading = false
+            })
         },
         deleteInvoice: function () {
             this.$snotify.confirm('Really delete this whole invoice?', 'Delete', {
@@ -245,6 +257,16 @@ export default {
     computed: {
         downloadUrl: function () {
             return this.hostUrl + "/download/" + this.$route.params.id + "?auth=1"
+        }
+    },
+    watch: {
+        invoiceData: {
+            handler(val, old) {
+                if (!this.loading && old.created !== "") {
+                    this.saveMetadata()
+                }
+            },
+            deep: true
         }
     }
 }

@@ -42,7 +42,7 @@ table! {
         entrepreneur_id -> Integer,
         contact_id -> Integer,
         code -> Varchar,
-        created -> Datetime,
+        created -> Date,
         pay_until -> Date,
         payed -> Nullable<Date>,
     }
