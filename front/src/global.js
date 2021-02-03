@@ -29,15 +29,19 @@ let GlobalFunctions = {
             return null;
         },
         ajax(name, data, timeout) {
-            return axios.post(this.hostUrl + "/" + name, data, {
-                timeout: timeout === undefined ? 5000 : timeout,
-                headers: {"X-Faktury-Auth": this.$storage.get('login-session')}
-            })
-                .then(t => {
-                    return t.data;
-                }).catch(err => {
-                    return Promise.resolve({error: err})
+            try {
+                return axios.post(this.hostUrl + "/" + name, data, {
+                    timeout: timeout === undefined ? 5000 : timeout,
+                    headers: {"X-Faktury-Auth": this.$storage.get('login-session')}
                 })
+                    .then(t => {
+                        return t.data;
+                    }).catch(err => {
+                        return Promise.resolve({error: err})
+                    })
+            } catch (e) {
+                return Promise.resolve({error: e})
+            }
         }, asyncActionWithNotification(name, data, initialText, responseToPromise) {
             this.$snotify.async(initialText, () => new Promise((resolve, reject) => {
                 this.ajax(name, data, 60000).then(resp => {

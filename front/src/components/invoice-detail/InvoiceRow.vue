@@ -1,7 +1,7 @@
 <template>
     <v-row class="pl-3 pr-3" v-bind:class="this.rowClass">
         <v-col cols="8">
-            <v-textarea label="Item name" rows="1" v-model="name" counter="400" v-on:input="delayedSave" :rules="rules.name"/>
+            <v-textarea label="Item name" rows="1" v-model="name" counter="400" :rules="rules.name"/>
         </v-col>
         <v-col cols="2">
             <v-currency-field
@@ -87,8 +87,9 @@ export default {
                 return this.data.itemName
             },
             set: function (value) {
-                let rowData = this.data;
-                rowData.itemName = value;
+                let rowData = this.data
+                rowData.itemName = value
+                this.delayedSave()
                 this.$emit("row-updated", rowData)
             }
         },
@@ -97,8 +98,9 @@ export default {
                 return this.data.itemCount
             },
             set: function (value) {
-                let rowData = this.data;
-                rowData.itemCount = parseInt(value, 10);
+                let rowData = this.data
+                rowData.itemCount = parseInt(value, 10)
+                this.delayedSave()
                 this.$emit("row-updated", rowData)
             }
         },
@@ -107,8 +109,9 @@ export default {
                 return this.data.itemPrice
             },
             set: function (value) {
-                let rowData = this.data;
-                rowData.itemPrice = value;
+                let rowData = this.data
+                rowData.itemPrice = value
+                this.delayedSave()
                 this.$emit("row-updated", rowData)
             }
         },
