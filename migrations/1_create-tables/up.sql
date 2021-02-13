@@ -49,7 +49,7 @@ CREATE TABLE `invoices`
     `pay_until`       DATE         NOT NULL,
     `payed`           DATE         NULL,
     PRIMARY KEY (`id`),
-    UNIQUE (`code`)
+    UNIQUE (`code`, `entrepreneur_id`)
 ) ENGINE = InnoDB;
 
 CREATE TABLE `invoice_rows`
