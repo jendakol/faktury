@@ -86,7 +86,8 @@
                     <v-card-actions>
                         <v-spacer></v-spacer>
                         <v-btn color="red darken-1" text @click="newDialog.shown=false">Close</v-btn>
-                        <v-btn color="green darken-1" text @click="saveNewContact">Save</v-btn>
+                        <v-btn color="green darken-1" text @click="saveNewContactAndClose">Save</v-btn>
+                        <v-btn color="green darken-1" text @click="saveNewContactAndCreateInvoice">Save & create invoice</v-btn>
                     </v-card-actions>
                 </v-card>
             </v-dialog>
@@ -189,17 +190,20 @@ export default {
             console.log("Adding new contact: ")
             console.log(contact)
 
-            console.log(contact.address)
-
-            this.asyncActionWithNotification("data-insert/contact", contact, "Saving", (resp) => new Promise((success, error) => {
+            return this.asyncActionWithNotification("data-insert/contact", contact, "Creating contact", (resp) => new Promise((success, error) => {
                     if (resp.id >= 0) {
                         success("Contact saved")
-                        this.$router.push({name: 'ContactDetail', params: {id: resp.id}})
                     } else {
                         error("Could not save contact")
                     }
                 })
-            );
+            )
+        },
+        saveNewContactAndCreateInvoice: function () {
+            this.saveNewContact().then((resp) => this.newInvoice(resp.id))
+        },
+        saveNewContactAndClose: function () {
+            this.saveNewContact().then((resp) => this.$router.push({name: 'ContactDetail', params: {id: resp.id}}))
         },
         deleteContact: function (id) {
             this.$snotify.confirm('Really delete this contact?', 'Delete', {
@@ -245,7 +249,7 @@ export default {
             console.log("Adding new invoice: ")
             console.log(invoice)
 
-            this.asyncActionWithNotification("data-insert/invoice", invoice, "Saving", (resp) => new Promise((success, error) => {
+            this.asyncActionWithNotification("data-insert/invoice", invoice, "Creating invoice", (resp) => new Promise((success, error) => {
                     if (resp.id >= 0) {
                         success("Invoice created")
                         this.$router.push({name: 'InvoiceDetail', params: {id: resp.id}})
