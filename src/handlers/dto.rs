@@ -1,5 +1,4 @@
 use chrono::NaiveDate as Date;
-use chrono::NaiveDateTime as Datetime;
 use frunk::*;
 use serde::{Deserialize, Serialize};
 

@@ -1,5 +1,4 @@
 use chrono::NaiveDate as Date;
-use chrono::NaiveDateTime as Datetime;
 use frunk::{Generic, LabelledGeneric};
 
 use crate::dao::Vat;
