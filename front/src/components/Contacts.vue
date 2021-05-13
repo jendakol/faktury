@@ -3,95 +3,95 @@
         <v-card-title>
             <h1 class="faktury-page-header">Your contacts</h1>
         </v-card-title>
-        <v-text-field
-            v-model="search"
-            clearable
-            flat
-            solo
-            hide-details
-            prepend-inner-icon="mdi-account-search"
-            label="Search"
-        />
-        <v-card flat
-                v-for="contact in filteredContacts" :key="contact.id"
-                :to="{ name: 'ContactDetail', params: { id: contact.id } }">
-            <v-row class="pl-3 pr-3 contact-row">
-                <v-col cols="3" class="col-name">{{ contact.name }}</v-col>
-                <v-col cols="2" class="col-code">{{ contact.code }}</v-col>
-                <v-col cols="5" class="col-addr">{{ contact.address }}</v-col>
-                <v-col cols="2" align="right">
-                    <v-tooltip top>
-                        <template v-slot:activator="{ on, attrs }">
-                            <v-btn icon v-bind="attrs" v-on="on" @click.stop.prevent="newInvoice(contact.id)">
-                                <v-icon color="green lighten-1">mdi-text-box-plus</v-icon>
-                            </v-btn>
-                        </template>
-                        <span>Create new invoice for {{ contact.name }}</span>
-                    </v-tooltip>
-                    <v-tooltip top>
-                        <template v-slot:activator="{ on, attrs }">
-                            <v-btn icon v-bind="attrs" v-on="on" @click.stop.prevent="deleteContact(contact.id)">
-                                <v-icon color="red lighten-1">mdi-delete</v-icon>
-                            </v-btn>
-                        </template>
-                        <span>Delete '{{ contact.name }}' contact</span>
-                    </v-tooltip>
-                </v-col>
-            </v-row>
-        </v-card>
+        <v-card-text>
+
+            <v-text-field
+                v-model="search"
+                clearable
+                flat
+                solo
+                hide-details
+                prepend-inner-icon="mdi-account-search"
+                label="Search"
+            />
+            <v-card flat
+                    v-for="contact in filteredContacts" :key="contact.id"
+                    :to="{ name: 'ContactDetail', params: { id: contact.id } }">
+                <v-row class="pl-3 pr-3 contact-row">
+                    <v-col cols="3" class="col-name">{{ contact.name }}</v-col>
+                    <v-col cols="2" class="col-code">{{ contact.code }}</v-col>
+                    <v-col cols="5" class="col-addr">{{ contact.address }}</v-col>
+                    <v-col cols="2" align="right">
+                        <v-tooltip top>
+                            <template v-slot:activator="{ on, attrs }">
+                                <v-btn icon v-bind="attrs" v-on="on" @click.stop.prevent="newInvoice(contact.id)">
+                                    <v-icon color="green lighten-1">mdi-text-box-plus</v-icon>
+                                </v-btn>
+                            </template>
+                            <span>Create new invoice for {{ contact.name }}</span>
+                        </v-tooltip>
+                        <v-tooltip top>
+                            <template v-slot:activator="{ on, attrs }">
+                                <v-btn icon v-bind="attrs" v-on="on" @click.stop.prevent="deleteContact(contact.id)">
+                                    <v-icon color="red lighten-1">mdi-delete</v-icon>
+                                </v-btn>
+                            </template>
+                            <span>Delete '{{ contact.name }}' contact</span>
+                        </v-tooltip>
+                    </v-col>
+                </v-row>
+            </v-card>
+        </v-card-text>
         <v-divider/>
         <v-card-actions>
+                <v-dialog v-model="newDialog.shown" persistent max-width="600px" overlay-opacity="0.9">
+                    <v-card outlined raised>
+                        <v-card-title>
+                            <span class="headline">Add new contact</span>
+                        </v-card-title>
+                        <v-card-text>
+                            <v-container fluid>
+                                <v-row>
+                                    <v-col>
+                                        <v-text-field label="Name*" v-model="newDialog.name" counter="250" required/>
+                                    </v-col>
+                                </v-row>
+                                <v-row>
+                                    <v-col>
+                                        <v-text-field label="Code" type="number" v-model="newDialog.code" counter="100"/>
+                                    </v-col>
+                                </v-row>
+                                <v-row>
+                                    <v-col>
+                                        <v-select
+                                            :items="vatSelectItems"
+                                            v-model="newDialog.vat.type"
+                                            label="VAT type"
+                                            outlined
+                                        ></v-select>
+
+                                        <v-text-field v-if="newDialog.vat.type === 'Code'" label="VAT code" v-model="newDialog.vat.value"
+                                                      counter="100"/>
+                                    </v-col>
+                                </v-row>
+                                <v-row>
+                                    <v-col>
+                                        <v-textarea label="Address*" v-model="newDialog.address" counter="250" required/>
+                                    </v-col>
+                                </v-row>
+                            </v-container>
+                            <small>*indicates required field</small></v-card-text>
+                        <v-card-actions>
+                            <v-spacer></v-spacer>
+                            <v-btn color="red darken-1" text @click="newDialog.shown=false">Close</v-btn>
+                            <v-btn color="green darken-1" text @click="saveNewContactAndClose">Save</v-btn>
+                            <v-btn color="green darken-1" text @click="saveNewContactAndCreateInvoice">Save & create invoice</v-btn>
+                        </v-card-actions>
+                    </v-card>
+                </v-dialog>
             <v-spacer/>
             <v-btn color="green darken-1" text @click="showNewDialog">New</v-btn>
         </v-card-actions>
-
-        <v-row justify="center">
-            <v-dialog v-model="newDialog.shown" persistent max-width="600px" overlay-opacity="0.9">
-                <v-card outlined raised>
-                    <v-card-title>
-                        <span class="headline">Add new contact</span>
-                    </v-card-title>
-                    <v-card-text>
-                        <v-container fluid>
-                            <v-row>
-                                <v-col>
-                                    <v-text-field label="Name*" v-model="newDialog.name" counter="250" required/>
-                                </v-col>
-                            </v-row>
-                            <v-row>
-                                <v-col>
-                                    <v-text-field label="Code" type="number" v-model="newDialog.code" counter="100"/>
-                                </v-col>
-                            </v-row>
-                            <v-row>
-                                <v-col>
-                                    <v-select
-                                        :items="vatSelectItems"
-                                        v-model="newDialog.vat.type"
-                                        label="VAT type"
-                                        outlined
-                                    ></v-select>
-
-                                    <v-text-field v-if="newDialog.vat.type === 'Code'" label="VAT code" v-model="newDialog.vat.value"
-                                                  counter="100"/>
-                                </v-col>
-                            </v-row>
-                            <v-row>
-                                <v-col>
-                                    <v-textarea label="Address*" v-model="newDialog.address" counter="250" required/>
-                                </v-col>
-                            </v-row>
-                        </v-container>
-                        <small>*indicates required field</small></v-card-text>
-                    <v-card-actions>
-                        <v-spacer></v-spacer>
-                        <v-btn color="red darken-1" text @click="newDialog.shown=false">Close</v-btn>
-                        <v-btn color="green darken-1" text @click="saveNewContactAndClose">Save</v-btn>
-                        <v-btn color="green darken-1" text @click="saveNewContactAndCreateInvoice">Save & create invoice</v-btn>
-                    </v-card-actions>
-                </v-card>
-            </v-dialog>
-        </v-row>
     </v-card>
 </template>
 

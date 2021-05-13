@@ -8,11 +8,10 @@
 
         <v-divider/>
         <v-card-actions>
+            <ContactsDialog @contact-selected="saveNewInvoice" ref="ContactsDialog"/>
             <v-spacer/>
             <v-btn color="green darken-1" text @click="$refs.ContactsDialog.show()">New</v-btn>
         </v-card-actions>
-
-        <ContactsDialog @contact-selected="saveNewInvoice" ref="ContactsDialog"/>
     </v-card>
 </template>
 

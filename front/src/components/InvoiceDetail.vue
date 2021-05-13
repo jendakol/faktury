@@ -81,11 +81,11 @@
                                 <template v-slot:activator="{ on, attrs }">
                                     <v-col cols="4" @click="$refs.ContactsDialog.show()" class="invoice-contact-box" v-bind="attrs"
                                            v-on="on">
-                                        <ContactsDialog @contact-selected="contactSelected" ref="ContactsDialog"/>
                                         <ContactBox :code="contactData.code"
                                                     :name="contactData.name"
                                                     :address="contactData.address"
                                                     :vat="contactData.vat"/>
+                                        <ContactsDialog @contact-selected="contactSelected" ref="ContactsDialog"/>
                                     </v-col>
                                 </template>
                                 <span>Click to change</span>
