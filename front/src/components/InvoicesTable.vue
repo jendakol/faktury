@@ -23,13 +23,21 @@
                             </template>
                             <span>Payed {{ formatDate(invoice.payed) }}</span>
                         </v-tooltip>
-                        <v-tooltip top v-else>
+                        <v-tooltip top v-else-if="isDelayedWithPayment(invoice)">
                             <template v-slot:activator="{ on, attrs }">
                                 <v-btn x-small class="mb-1" icon v-bind="attrs" v-on="on" @click.stop.prevent="deleteInvoice(invoice.id)">
                                     <v-icon color="red lighten-1">mdi-exclamation-thick</v-icon>
                                 </v-btn>
                             </template>
-                            <span>Unpaid!</span>
+                            <span>Unpaid - delayed with payment!</span>
+                        </v-tooltip>
+                        <v-tooltip top v-else>
+                            <template v-slot:activator="{ on, attrs }">
+                                <v-btn x-small class="mb-1" icon v-bind="attrs" v-on="on" @click.stop.prevent="deleteInvoice(invoice.id)">
+                                    <v-icon color="red lighten-1">mdi-close</v-icon>
+                                </v-btn>
+                            </template>
+                            <span>Yet unpaid!</span>
                         </v-tooltip>
                     </v-col>
                     <v-col class="align-center ma-0 pa-0">
@@ -44,8 +52,11 @@
                             </v-tooltip>
                             <v-tooltip top>
                                 <template v-slot:activator="{ on, attrs }">
-                                    <v-btn small icon v-bind="attrs" v-on="on" @click.stop.prevent="markAsPaid(invoice.id)">
+                                    <v-btn v-if="invoice.payed == null" small icon v-bind="attrs" v-on="on" @click.stop.prevent="markAsPaid(invoice.id)">
                                         <v-icon color="green lighten-1">mdi-wallet-plus</v-icon>
+                                    </v-btn>
+                                    <v-btn small icon v-else>
+                                        <v-icon color="#666">mdi-wallet-plus</v-icon>
                                     </v-btn>
                                 </template>
                                 <span>Mark as paid</span>
@@ -113,12 +124,16 @@ export default {
         return {
             loading: true,
             invoices: [],
+            today: new Date()
         }
     },
     methods: {
         formatDate: function (isoString) {
             let date = new Date(isoString)
             return date.toLocaleDateString(this.$store.state.locale)
+        },
+        isDelayedWithPayment: function (invoice) {
+            return new Date(invoice.payUntil).getTime() < this.today.getTime()
         },
         deleteInvoice: function (id) {
             this.$snotify.confirm('Really delete this invoice?', 'Delete', {
