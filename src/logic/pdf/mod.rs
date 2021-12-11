@@ -123,14 +123,14 @@ impl PdfCreator {
         // ----
 
         self.current_layer // TODO hard code value
-            .use_text("faktura", 44, Mm(PAPER_BORDER), Mm(266.0), &font_calibri_bold);
+            .use_text("faktura", 44.0, Mm(PAPER_BORDER), Mm(266.0), &font_calibri_bold);
 
         self.current_layer
-            .use_text(&invoice.code, 10, Mm(PAPER_BORDER), Mm(260.5), &font_calibri_light);
+            .use_text(&invoice.code, 10.0, Mm(PAPER_BORDER), Mm(260.5), &font_calibri_light);
 
         self.current_layer.use_text(
             invoice.created.format("%d.%m.%Y").to_string(),
-            10,
+            10.0,
             Mm(PAPER_BORDER + 30.0),
             Mm(260.5),
             &font_calibri_light,
@@ -215,13 +215,13 @@ impl PdfCreator {
 
         let layer = &self.current_layer;
 
-        layer.use_text(header, 10, Mm(offset_left), Mm(offset_bottom), &font);
+        layer.use_text(header, 10.0, Mm(offset_left), Mm(offset_bottom), &font);
         offset_bottom -= 2.0 * LINE_SPACE;
-        layer.use_text(name, 10, Mm(offset_left), Mm(offset_bottom), &font_bold);
+        layer.use_text(name, 10.0, Mm(offset_left), Mm(offset_bottom), &font_bold);
 
         for line in addr.split("\r\n") {
             offset_bottom -= LINE_SPACE;
-            layer.use_text(line, 10, Mm(offset_left), Mm(offset_bottom), &font)
+            layer.use_text(line, 10.0, Mm(offset_left), Mm(offset_bottom), &font)
         }
 
         // ičo
@@ -230,7 +230,7 @@ impl PdfCreator {
             None => String::new(),
             Some(code) => format!("IČO {}", code), // TODO hard code value
         };
-        layer.use_text(code, 10, Mm(offset_left), Mm(offset_bottom), &font);
+        layer.use_text(code, 10.0, Mm(offset_left), Mm(offset_bottom), &font);
 
         // dič
         offset_bottom -= LINE_SPACE;
@@ -241,7 +241,7 @@ impl PdfCreator {
         };
 
         if let Some(vat) = vat {
-            layer.use_text(vat, 10, Mm(offset_left), Mm(offset_bottom), &font);
+            layer.use_text(vat, 10.0, Mm(offset_left), Mm(offset_bottom), &font);
         }
 
         Ok(offset_bottom)
@@ -262,13 +262,13 @@ impl PdfCreator {
         if let Some(phone) = phone {
             let phone = PdfCreator::split_phone_parts(phone);
 
-            layer.use_text(phone, 8, Mm(offset_left + 5.6), Mm(offset_bottom), font);
+            layer.use_text(phone, 8.0, Mm(offset_left + 5.6), Mm(offset_bottom), font);
             self.add_img("icon_phone.bmp", offset_left, offset_bottom - 1.0)?;
             offset_bottom -= LINE_SPACE;
         }
 
         if let Some(email) = email {
-            layer.use_text(email, 8, Mm(offset_left + 5.6), Mm(offset_bottom), font);
+            layer.use_text(email, 8.0, Mm(offset_left + 5.6), Mm(offset_bottom), font);
             self.add_img("icon_mail.bmp", offset_left, offset_bottom - 1.0)?;
         }
 
@@ -288,7 +288,7 @@ impl PdfCreator {
 
         layer.use_text(
             "Fyzická osoba zapsaná v Živnostenském rejstříku.", // TODO hard code value
-            8,
+            8.0,
             Mm(offset_left),
             Mm(offset_bottom),
             &font,
@@ -296,13 +296,13 @@ impl PdfCreator {
         offset_bottom -= LINE_SPACE;
         layer.use_text(
             "Úřad příslušný podle § 71 odst. 2 živnostenského", // TODO hard code value
-            8,
+            8.0,
             Mm(offset_left),
             Mm(offset_bottom),
             &font,
         );
         offset_bottom -= LINE_SPACE; // TODO hard code value
-        layer.use_text(format!("zákona: {}.", office_place), 8, Mm(offset_left), Mm(offset_bottom), &font);
+        layer.use_text(format!("zákona: {}.", office_place), 8.0, Mm(offset_left), Mm(offset_bottom), &font);
 
         Ok(())
     }
@@ -313,9 +313,9 @@ impl PdfCreator {
         let layer = &self.current_layer;
 
         // TODO hard code value
-        layer.use_text("Předáno dne:", 8, Mm(offset_left), Mm(offset_bottom), &font);
+        layer.use_text("Předáno dne:", 8.0, Mm(offset_left), Mm(offset_bottom), &font);
         offset_bottom -= LINE_SPACE;
-        layer.use_text("Převzal:", 8, Mm(offset_left), Mm(offset_bottom), &font);
+        layer.use_text("Převzal:", 8.0, Mm(offset_left), Mm(offset_bottom), &font);
 
         Ok(())
     }
@@ -348,7 +348,7 @@ impl PdfCreator {
 
         layer.use_text(
             format!("{} Kč", total_price_formatted), // TODO hard code value
-            10,
+            10.0,
             Mm(PAPER_WIDTH - PAPER_BORDER - Self::price_width(&total_price_formatted) - WIDTH_SPACE - WIDTH_CURR_SYMBOL),
             Mm(offset_bottom),
             &font_bold,
@@ -365,7 +365,7 @@ impl PdfCreator {
 
             let mut base_row = true;
             for item_name_row in item_name_rows {
-                layer.use_text(item_name_row, 10, Mm(offset_left), Mm(offset_bottom), &font);
+                layer.use_text(item_name_row, 10.0, Mm(offset_left), Mm(offset_bottom), &font);
 
                 if base_row {
                     let price_formatted = PdfCreator::format_price(price, use_decs);
@@ -374,7 +374,7 @@ impl PdfCreator {
 
                     layer.use_text(
                         format!("{} Kč", price_formatted), // TODO hard code value
-                        10,
+                        10.0,
                         Mm(left_align),
                         Mm(offset_bottom),
                         &font,
@@ -419,15 +419,15 @@ impl PdfCreator {
         let layer = &self.current_layer;
 
         // TODO hard code value
-        layer.use_text("PLATEBNÍ ÚDAJE", 10, Mm(offset_left), Mm(offset_bottom), &font);
+        layer.use_text("PLATEBNÍ ÚDAJE", 10.0, Mm(offset_left), Mm(offset_bottom), &font);
 
         offset_bottom -= 2.0 * LINE_SPACE;
 
         // TODO hard code value
-        layer.use_text("zaplaťte prosím na účet č.", 10, Mm(offset_left), Mm(offset_bottom), &font);
+        layer.use_text("zaplaťte prosím na účet č.", 10.0, Mm(offset_left), Mm(offset_bottom), &font);
         layer.use_text(
             format!("{}/{:04}", account_no, bank_code),
-            10,
+            10.0,
             Mm(offset_left + 37.0),
             Mm(offset_bottom),
             &font_bold,
@@ -436,16 +436,16 @@ impl PdfCreator {
         offset_bottom -= LINE_SPACE;
 
         // TODO hard code value
-        layer.use_text("s variabilním symbolem", 10, Mm(offset_left), Mm(offset_bottom), &font);
-        layer.use_text(vs, 10, Mm(offset_left + 34.5), Mm(offset_bottom), &font_bold);
+        layer.use_text("s variabilním symbolem", 10.0, Mm(offset_left), Mm(offset_bottom), &font);
+        layer.use_text(vs, 10.0, Mm(offset_left + 34.5), Mm(offset_bottom), &font_bold);
 
         offset_bottom = PAPER_BORDER;
 
         // TODO hard code value
-        layer.use_text("do", 10, Mm(offset_left), Mm(offset_bottom), &font);
+        layer.use_text("do", 10.0, Mm(offset_left), Mm(offset_bottom), &font);
         layer.use_text(
             due_date.format("%d.%m.%Y").to_string(),
-            10,
+            10.0,
             Mm(offset_left + 5.0),
             Mm(offset_bottom),
             &font_bold,
