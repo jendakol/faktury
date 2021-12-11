@@ -1,35 +1,64 @@
 <template>
-    <div>
+    <div class="ma-0 pa-2 pt-1">
         <v-card v-for="invoice in invoices" :key="invoice.code"
                 :to="{ name: 'InvoiceDetail', params: { id: invoice.id } }"
-                class="pa-0"
+                class="ma-0 mt-1 pa-0"
+                no-gutters
                 hover
                 link
+                outlined
                 rounded>
             <v-card-text>
-                <v-row class="invoice-row">
-                    <v-col cols="2" class="col-code">{{ invoice.code }}</v-col>
-                    <v-col cols="2" class="col-created">{{ formatDate(invoice.created) }}</v-col>
-                    <v-col cols="3" class="col-contact">{{ invoice.contactName }}</v-col>
-                    <v-spacer/>
-                    <v-col cols="2" class="col-price">{{ Number((invoice.priceSum).toFixed(2)) }} Kč</v-col>
-                    <v-col cols="2">
-                        <v-tooltip top>
+                <v-row class="invoice-row d-flex pa-1">
+                    <v-col class="align-center ma-0 pa-0 pt-1 col-code">{{ invoice.code }}</v-col>
+                    <v-col class="align-center ma-0 pa-0 pt-1 col-created">{{ formatDate(invoice.created) }}</v-col>
+                    <v-col class="align-center ma-0 pa-0 pt-1 col-contact">{{ invoice.contactName }}</v-col>
+                    <v-col class="align-center ma-0 pa-0 pt-1 col-price">
+                        {{ Number((invoice.priceSum).toFixed(2)) }} Kč
+                        <v-tooltip top v-if="invoice.payed != null">
                             <template v-slot:activator="{ on, attrs }">
-                                <v-btn icon v-bind="attrs" v-on="on" @click.stop.prevent="deleteInvoice(invoice.id)">
-                                    <v-icon color="red lighten-1">mdi-delete</v-icon>
+                                <v-btn x-small class="mb-1" icon v-bind="attrs" v-on="on" @click.stop.prevent="deleteInvoice(invoice.id)">
+                                    <v-icon color="green lighten-1">mdi-check-circle</v-icon>
                                 </v-btn>
                             </template>
-                            <span>Delete invoice {{ invoice.code }}</span>
+                            <span>Payed {{ formatDate(invoice.payed) }}</span>
                         </v-tooltip>
-                        <v-tooltip top>
+                        <v-tooltip top v-else>
                             <template v-slot:activator="{ on, attrs }">
-                                <v-btn icon v-bind="attrs" v-on="on" @click.stop.prevent="copyInvoice(invoice.id)">
-                                    <v-icon color="silver lighten-1">mdi-content-copy</v-icon>
+                                <v-btn x-small class="mb-1" icon v-bind="attrs" v-on="on" @click.stop.prevent="deleteInvoice(invoice.id)">
+                                    <v-icon color="red lighten-1">mdi-exclamation-thick</v-icon>
                                 </v-btn>
                             </template>
-                            <span>Copy invoice {{ invoice.code }}</span>
+                            <span>Unpaid!</span>
                         </v-tooltip>
+                    </v-col>
+                    <v-col class="align-center ma-0 pa-0">
+                        <v-container pa-0 ma-0 class="d-flex justify-end">
+                            <v-tooltip top>
+                                <template v-slot:activator="{ on, attrs }">
+                                    <v-btn small icon v-bind="attrs" v-on="on" @click.stop.prevent="copyInvoice(invoice.id)">
+                                        <v-icon color="silver lighten-1">mdi-content-copy</v-icon>
+                                    </v-btn>
+                                </template>
+                                <span>Copy</span>
+                            </v-tooltip>
+                            <v-tooltip top>
+                                <template v-slot:activator="{ on, attrs }">
+                                    <v-btn small icon v-bind="attrs" v-on="on" @click.stop.prevent="markAsPaid(invoice.id)">
+                                        <v-icon color="green lighten-1">mdi-wallet-plus</v-icon>
+                                    </v-btn>
+                                </template>
+                                <span>Mark as paid</span>
+                            </v-tooltip>
+                            <v-tooltip top>
+                                <template v-slot:activator="{ on, attrs }">
+                                    <v-btn small icon v-bind="attrs" v-on="on" @click.stop.prevent="deleteInvoice(invoice.id)">
+                                        <v-icon color="red lighten-1">mdi-delete</v-icon>
+                                    </v-btn>
+                                </template>
+                                <span>Delete</span>
+                            </v-tooltip>
+                        </v-container>
                     </v-col>
                 </v-row>
             </v-card-text>
@@ -134,6 +163,58 @@ export default {
                     }
                 })
             );
+        },
+        markAsPaid: function (id) {
+            console.log("Marking invoice " + id + " as paid")
+
+            let i = this.lodash.findIndex(this.invoices, ['id', id])
+            if (i >= 0) {
+                const now = new Date()
+                this.invoices[i].payed = now.toISOString().split('T')[0]
+            } else {
+                console.log("Couldn't find invoice with id " + id + ", weird!!")
+                return
+            }
+
+            this.saveMetadata(id)
+        },
+        saveMetadata: function (id) {
+            let invoiceData;
+            let i = this.lodash.findIndex(this.invoices, ['id', id])
+            if (i >= 0) {
+                invoiceData = this.invoices[i]
+            } else {
+                console.log("Couldn't find invoice with id " + id + ", weird!!")
+                return
+            }
+
+            if (this.loading) return;
+            this.loading = true
+
+            // fix date formats:
+            invoiceData.created = invoiceData.created.substring(0, 10)
+            invoiceData.payUntil = invoiceData.payUntil.substring(0, 10)
+            invoiceData.payed = invoiceData.payed != null ? invoiceData.payed.substring(0, 10) : null
+
+
+            console.log("Saving invoice metadata")
+            console.log(invoiceData)
+
+            this.ajax("data-update/invoice", invoiceData).then(r => {
+                if (r.success) {
+                    console.log("Saved!")
+                    this.$set(this.invoices[i], invoiceData) // to trigger the change callbacks
+                } else {
+                    this.$snotify.error("Could not save the invoice!", "Saving")
+                }
+
+                this.loading = false
+            }).catch(e => {
+                this.showNotification("error", "Could not save the invoice!", "Saving")
+                // this.$snotify.error("Could not save the invoice!", "Saving")
+                console.log(e)
+                this.loading = false
+            })
         }
     }
 }

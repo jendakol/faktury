@@ -1,7 +1,7 @@
 <template>
     <v-card width="1000" outlined raised>
         <v-card-title>
-            <h1 class="faktury-page-header">Your recent invoices</h1>
+            <h1 class="faktury-page-header">Your most recent invoices</h1>
         </v-card-title>
         <InvoicesTable :last='3'/>
     </v-card>

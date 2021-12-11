@@ -51,7 +51,7 @@
                                 <v-card outlined class="pl-3 pr-3 mt-1">
                                     <v-row>
                                         <v-col cols="4">Payed</v-col>
-                                        <v-col cols="8">
+                                        <v-col cols="7">
                                             <v-tooltip right>
                                                 <template v-slot:activator="{ on, attrs }">
                                                     <Datetime
@@ -63,6 +63,17 @@
                                                     />
                                                 </template>
                                                 <span>Click to change</span>
+                                            </v-tooltip>
+                                        </v-col>
+                                        <v-col cols="1">
+                                            <v-tooltip right v-if="invoiceData.payed != null">
+                                                <template v-slot:activator="{ on, attrs }">
+                                                    <v-btn icon x-small v-bind="attrs" v-on="on"
+                                                           @click.stop.prevent="markAsUnpaid">
+                                                        <v-icon left small color="red lighten-1">mdi-delete</v-icon>
+                                                    </v-btn>
+                                                </template>
+                                                <span>Mark as unpaid</span>
                                             </v-tooltip>
                                         </v-col>
                                     </v-row>
@@ -168,6 +179,10 @@ export default {
         contactSelected: function (contact) {
             this.contactData = contact
             this.invoiceData.contactId = contact.id
+            this.saveMetadata()
+        },
+        markAsUnpaid: function () {
+            this.invoiceData.payed = null
             this.saveMetadata()
         },
         saveMetadata: function () {

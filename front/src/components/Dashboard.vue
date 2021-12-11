@@ -1,19 +1,19 @@
 <template>
     <div>
-        <Invoices class="ma-5 mt-0"/>
-        <Contacts class="ma-5"/>
+        <DashboardInvoices class="mt-4"/>
+        <DashboardContacts class="mt-4"/>
     </div>
 </template>
 
 <script>
-import Invoices from "@/components/dashboard/Invoices";
-import Contacts from "@/components/dashboard/Contacts";
+import DashboardInvoices from "@/components/dashboard/DashboardInvoices";
+import DashboardContacts from "@/components/dashboard/DashboardContacts";
 
 export default {
     name: 'Dashboard',
     components: {
-        Contacts,
-        Invoices
+        DashboardContacts,
+        DashboardInvoices
     },
     data() {
         return {}

@@ -25,6 +25,7 @@ pub struct NewAccount<'a> {
 #[derive(Identifiable, Queryable, QueryableByName, Associations, AsChangeset, LabelledGeneric, PartialEq, Debug, Clone)]
 #[belongs_to(Account)]
 #[table_name = "entrepreneurs"]
+#[changeset_options(treat_none_as_null = "true")]
 pub struct Entrepreneur {
     pub id: i32,
     pub account_id: i32,
@@ -60,6 +61,7 @@ pub struct NewEntrepreneur<'a> {
 #[derive(Identifiable, Queryable, QueryableByName, Associations, AsChangeset, LabelledGeneric, PartialEq, Debug, Clone)]
 #[belongs_to(Entrepreneur)]
 #[table_name = "contacts"]
+#[changeset_options(treat_none_as_null = "true")]
 pub struct Contact {
     pub id: i32,
     pub entrepreneur_id: i32,
@@ -82,6 +84,7 @@ pub struct NewContact<'a> {
 #[derive(Identifiable, Queryable, QueryableByName, Associations, AsChangeset, LabelledGeneric, Generic, PartialEq, Debug, Clone)]
 #[belongs_to(Entrepreneur)]
 #[table_name = "invoices"]
+#[changeset_options(treat_none_as_null = "true")]
 pub struct Invoice {
     pub id: i32,
     pub entrepreneur_id: i32,
@@ -106,6 +109,7 @@ pub struct NewInvoice<'a> {
 #[derive(Identifiable, Queryable, QueryableByName, Associations, AsChangeset, LabelledGeneric, PartialEq, Debug, Clone)]
 #[belongs_to(Invoice)]
 #[table_name = "invoice_rows"]
+#[changeset_options(treat_none_as_null = "true")]
 pub struct InvoiceRow {
     pub id: i32,
     pub invoice_id: i32,
@@ -126,6 +130,7 @@ pub struct NewInvoiceRow {
 #[derive(Identifiable, Queryable, QueryableByName, Associations, AsChangeset, LabelledGeneric, PartialEq, Debug, Clone)]
 #[belongs_to(Account)]
 #[table_name = "login_sessions"]
+#[changeset_options(treat_none_as_null = "true")]
 pub struct LoginSession {
     pub id: String,
     pub account_id: i32,
