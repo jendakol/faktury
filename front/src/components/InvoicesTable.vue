@@ -17,7 +17,7 @@
                         {{ Number((invoice.priceSum).toFixed(2)) }} Kč
                         <v-tooltip top v-if="invoice.payed != null">
                             <template v-slot:activator="{ on, attrs }">
-                                <v-btn x-small class="mb-1" icon v-bind="attrs" v-on="on" @click.stop.prevent="deleteInvoice(invoice.id)">
+                                <v-btn x-small class="mb-1" icon v-bind="attrs" v-on="on">
                                     <v-icon color="green lighten-1">mdi-check-circle</v-icon>
                                 </v-btn>
                             </template>
@@ -25,7 +25,7 @@
                         </v-tooltip>
                         <v-tooltip top v-else-if="isDelayedWithPayment(invoice)">
                             <template v-slot:activator="{ on, attrs }">
-                                <v-btn x-small class="mb-1" icon v-bind="attrs" v-on="on" @click.stop.prevent="deleteInvoice(invoice.id)">
+                                <v-btn x-small class="mb-1" icon v-bind="attrs" v-on="on">
                                     <v-icon color="red lighten-1">mdi-exclamation-thick</v-icon>
                                 </v-btn>
                             </template>
@@ -33,7 +33,7 @@
                         </v-tooltip>
                         <v-tooltip top v-else>
                             <template v-slot:activator="{ on, attrs }">
-                                <v-btn x-small class="mb-1" icon v-bind="attrs" v-on="on" @click.stop.prevent="deleteInvoice(invoice.id)">
+                                <v-btn x-small class="mb-1" icon v-bind="attrs" v-on="on">
                                     <v-icon color="red lighten-1">mdi-close</v-icon>
                                 </v-btn>
                             </template>
@@ -50,17 +50,23 @@
                                 </template>
                                 <span>Copy</span>
                             </v-tooltip>
-                            <v-tooltip top>
+                            <v-tooltip top v-if="invoice.payed == null">
                                 <template v-slot:activator="{ on, attrs }">
-                                    <v-btn v-if="invoice.payed == null" small icon v-bind="attrs" v-on="on"
+                                    <v-btn small icon v-bind="attrs" v-on="on"
                                            @click.stop.prevent="markAsPaid(invoice.id)">
-                                        <v-icon color="green lighten-1">mdi-wallet-plus</v-icon>
-                                    </v-btn>
-                                    <v-btn small icon v-else>
-                                        <v-icon color="#666">mdi-wallet-plus</v-icon>
+                                        <v-icon color="green lighten-2">mdi-wallet-plus</v-icon>
                                     </v-btn>
                                 </template>
                                 <span>Mark as paid</span>
+                            </v-tooltip>
+                            <v-tooltip top v-else>
+                                <template v-slot:activator="{ on, attrs }">
+                                    <v-btn small icon v-bind="attrs" v-on="on"
+                                           @click.stop.prevent="markAsUnpaid(invoice.id)">
+                                        <v-icon color="red lighten-2">mdi-wallet-plus</v-icon>
+                                    </v-btn>
+                                </template>
+                                <span>Mark as unpaid</span>
                             </v-tooltip>
                             <v-tooltip top>
                                 <template v-slot:activator="{ on, attrs }">
@@ -189,6 +195,19 @@ export default {
             if (i >= 0) {
                 const now = new Date()
                 this.invoices[i].payed = now.toISOString().split('T')[0]
+            } else {
+                console.log("Couldn't find invoice with id " + id + ", weird!!")
+                return
+            }
+
+            this.saveMetadata(id)
+        },
+        markAsUnpaid: function (id) {
+            console.log("Marking invoice " + id + " as unpaid")
+
+            let i = this.lodash.findIndex(this.invoices, ['id', id])
+            if (i >= 0) {
+                this.invoices[i].payed = undefined
             } else {
                 console.log("Couldn't find invoice with id " + id + ", weird!!")
                 return
