@@ -23,7 +23,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::config::DbConfig;
 use crate::dao::models::NewInvoice;
-pub use crate::dao::models::{Account, Contact, Entrepreneur, Invoice, InvoiceRow, LoginSession};
+pub use crate::dao::models::{Account, Contact, Entrepreneur, Invoice, InvoiceRow, LoginSession, MonthlyMoney};
 
 mod models;
 mod schema;
@@ -567,6 +567,28 @@ impl Dao {
                 .map_err(Self::map_db_error)
         })
         .await
+    }
+
+    pub async fn get_yearly_stats(&self, entrepreneur_id: u32, year: u16) -> DaoResult<(Vec<MonthlyMoney>, Vec<MonthlyMoney>)> {
+        let paid = self.with_connection(|conn| {
+            let query = format!(
+                "SELECT sum(item_price * item_count) as money, month(invoices.created) as month FROM `invoice_rows` join invoices on invoices.id = invoice_rows.invoice_id where invoices.entrepreneur_id = {} and invoices.created > '{}-01-01' and invoices.payed is not null group by month(invoices.created)",
+                entrepreneur_id, year
+            );
+
+            sql_query(query).load::<MonthlyMoney>(conn).map_err(Self::map_db_error)
+        }).await?;
+
+        let unpaid = self.with_connection(|conn| {
+            let query = format!(
+                "SELECT sum(item_price * item_count) as money, month(invoices.created) as month FROM `invoice_rows` join invoices on invoices.id = invoice_rows.invoice_id where invoices.entrepreneur_id = {} and invoices.created > '{}-01-01' and invoices.payed is null group by month(invoices.created)",
+                entrepreneur_id, year
+            );
+
+            sql_query(query).load::<MonthlyMoney>(conn).map_err(Self::map_db_error)
+        }).await?;
+
+        Ok((paid, unpaid))
     }
 
     // *** HELPER METHODS:

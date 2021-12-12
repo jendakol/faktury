@@ -15,7 +15,7 @@ use crate::dao::DaoResult;
 pub use crate::handlers::dto::LoginSession;
 use crate::handlers::dto::{
     Contact, ContactsListParams, Entrepreneur, Invoice, InvoiceRow, InvoiceWithRows, InvoicesListParams, LoginSessionCreated, NewContact,
-    NewEntrepreneur, NewInvoice, NewInvoiceRow,
+    NewEntrepreneur, NewInvoice, NewInvoiceRow, YearlyStats,
 };
 use crate::logic;
 use crate::logic::auth::Auth;
@@ -63,7 +63,8 @@ pub async fn account_login(data: web::Json<Login>, ctx: web::Data<RequestContext
             Some(account) => {
                 debug!("Found account for {}", data.username);
                 with_ok(ctx.dao.new_session(&account), |session| async {
-                    let session = LoginSession::from(session); // DAO to DTO entity
+                    let session = LoginSession::from(session);
+                    // DAO to DTO entity
                     debug!("Created new session for {}: {:?}", data.username, &session);
                     // TODO sign session
                     let session_encoded = base64::encode(serde_json::to_string(&session).expect("Could not serialize session"));
@@ -228,6 +229,30 @@ pub async fn list_invoice_rows(id: web::Path<u32>, session: LoginSession, ctx: w
 
     with_ok(ctx.dao.get_invoice_rows(*id), |rows| async {
         HttpResponse::Ok().json::<Vec<dto::InvoiceRow>>(rows.into_iter().map(|r| r.into()).collect())
+    })
+    .await
+}
+
+#[post("/data-get/yearly-stats/{year}/{entrepreneur_id}")]
+pub async fn get_yearly_stats(params: web::Path<(u16, u32)>, session: LoginSession, ctx: web::Data<RequestContext>) -> impl Responder {
+    let (year, entrepreneur_id) = (params.0, params.1);
+
+    debug!("Getting yearly stats for entrepreneur ID {}, year {}", entrepreneur_id, year);
+
+    if !(session.is_valid_for_entrepreneur(&ctx.dao, entrepreneur_id).await) {
+        debug!("Session {:?} is forbidden to access entrepreneur id {}", session, entrepreneur_id);
+        return HttpResponse::Forbidden().body("Invalid resource");
+    }
+
+    with_ok(ctx.dao.get_yearly_stats(entrepreneur_id, year), |data| async move {
+        // println!("{:?}", &paid);
+        // println!("{:?}", &unpaid);
+
+        // rows.sorted_by(|a, b| a.)
+
+        // let data = paid.into_iter().map(|s| (s.month as u8, s.money)).collect::<HashMap<u8, f64>>();
+
+        return HttpResponse::Ok().json::<YearlyStats>(data.into());
     })
     .await
 }

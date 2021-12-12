@@ -52,7 +52,8 @@
                             </v-tooltip>
                             <v-tooltip top>
                                 <template v-slot:activator="{ on, attrs }">
-                                    <v-btn v-if="invoice.payed == null" small icon v-bind="attrs" v-on="on" @click.stop.prevent="markAsPaid(invoice.id)">
+                                    <v-btn v-if="invoice.payed == null" small icon v-bind="attrs" v-on="on"
+                                           @click.stop.prevent="markAsPaid(invoice.id)">
                                         <v-icon color="green lighten-1">mdi-wallet-plus</v-icon>
                                     </v-btn>
                                     <v-btn small icon v-else>
@@ -108,7 +109,7 @@ import {SnotifyPosition} from "vue-snotify";
 export default {
     name: 'InvoicesTable',
     props: {
-        last: Number
+        last: Number,
     },
     mounted() {
         let data = {}
@@ -148,6 +149,7 @@ export default {
 
                             this.ajax("data-delete/invoice/" + id).then(r => {
                                 if (r.success) {
+                                    this.$emit('invoices-change')
                                     this.$set(this, 'invoices', this.lodash.filter(this.invoices, function (e) {
                                         return e.id !== id
                                     }))
@@ -172,6 +174,7 @@ export default {
             this.asyncActionWithNotification("data-copy/invoice/" + id, {}, "Saving", (resp) => new Promise((success, error) => {
                     if (resp.id >= 0) {
                         success("Invoice copied")
+                        this.$emit('invoices-change')
                         this.$router.push({name: 'InvoiceDetail', params: {id: resp.id}})
                     } else {
                         error("Could not save invoice")
@@ -218,6 +221,7 @@ export default {
             this.ajax("data-update/invoice", invoiceData).then(r => {
                 if (r.success) {
                     console.log("Saved!")
+                    this.$emit('invoices-change')
                     this.$set(this.invoices[i], invoiceData) // to trigger the change callbacks
                 } else {
                     this.$snotify.error("Could not save the invoice!", "Saving")
@@ -225,8 +229,7 @@ export default {
 
                 this.loading = false
             }).catch(e => {
-                this.showNotification("error", "Could not save the invoice!", "Saving")
-                // this.$snotify.error("Could not save the invoice!", "Saving")
+                this.$snotify.error("Could not save the invoice!", "Saving")
                 console.log(e)
                 this.loading = false
             })

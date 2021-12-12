@@ -104,6 +104,7 @@ async fn main() {
             .service(handlers::delete_contact)
             .service(handlers::delete_invoice)
             .service(handlers::delete_invoice_row)
+            .service(handlers::get_yearly_stats)
             .service(handlers::status)
             .route("/{filename:.*}", web::get().to(web_ui))
     })

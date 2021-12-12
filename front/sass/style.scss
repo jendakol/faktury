@@ -1,8 +1,22 @@
 @import "~vue-snotify/styles/material";
 
-.faktury-page-header {
-  font-size: 1.6em !important;
+.faktury-header {
+  color: white;
   font-weight: bold;
+  display: block;
+  width: 100%;
+}
+
+h1.faktury-page-header {
+  @extend .faktury-header;
+
+  font-size: 1.6em !important;
+}
+
+h2.faktury-sub-header {
+  @extend .faktury-header;
+
+  font-size: 1em !important;
 }
 
 .vdatetime-input {

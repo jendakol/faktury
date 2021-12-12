@@ -1,7 +1,10 @@
+use std::collections::HashMap;
+
 use chrono::NaiveDate as Date;
 use frunk::*;
 use serde::{Deserialize, Serialize};
 
+use crate::dao::MonthlyMoney;
 use crate::dao::Vat;
 
 #[derive(Serialize, Deserialize, LabelledGeneric, Debug, Clone)]
@@ -117,6 +120,17 @@ pub struct ContactsListParams {
     pub last_months: Option<u8>,
 }
 
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct MonthlyStat {
+    pub paid: f64,
+    pub unpaid: f64,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct YearlyStats(HashMap<u8, MonthlyStat>);
+
 // ****** New*:
 
 #[derive(Deserialize, Debug)]
@@ -221,5 +235,34 @@ impl From<Invoice> for crate::dao::Invoice {
 impl From<InvoiceRow> for crate::dao::InvoiceRow {
     fn from(i: InvoiceRow) -> Self {
         frunk::labelled_convert_from(i)
+    }
+}
+
+impl From<(Vec<MonthlyMoney>, Vec<MonthlyMoney>)> for YearlyStats {
+    fn from(d: (Vec<MonthlyMoney>, Vec<MonthlyMoney>)) -> Self {
+        let (paid, unpaid) = d;
+
+        // paid.sort_by(|a, b| Ord::cmp(&a.month, &b.month));
+        // unpaid.sort_by(|a, b| Ord::cmp(&a.month, &b.month));
+
+        let paid = paid.into_iter().map(|s| (s.month as u8, s.money)).collect::<HashMap<u8, f64>>();
+        let unpaid = unpaid.into_iter().map(|s| (s.month as u8, s.money)).collect::<HashMap<u8, f64>>();
+
+        let mut stats = HashMap::new();
+
+        for month in 1..=12u8 {
+            let paid_m = paid.get(&month).copied().unwrap_or(0f64);
+            let unpaid_m = unpaid.get(&month).copied().unwrap_or(0f64);
+
+            stats.insert(
+                month,
+                MonthlyStat {
+                    paid: paid_m,
+                    unpaid: unpaid_m,
+                },
+            );
+        }
+
+        YearlyStats(stats)
     }
 }

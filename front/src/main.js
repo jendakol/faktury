@@ -27,6 +27,11 @@ Vue.use(Snotify, {
   }
 })
 
+import { Chart, registerables } from "chart.js";
+import VComp from "@vue/composition-api";
+Chart.register(...registerables);
+Vue.use(VComp);
+
 import Datetime from 'vue-datetime'
 import 'vue-datetime/dist/vue-datetime.css'
 Vue.use(Datetime);

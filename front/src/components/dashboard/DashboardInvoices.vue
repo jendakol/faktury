@@ -3,7 +3,7 @@
         <v-card-title>
             <h1 class="faktury-page-header">Your most recent invoices</h1>
         </v-card-title>
-        <InvoicesTable :last='3'/>
+        <InvoicesTable :last='5' v-on:invoices-change="invoicesChange"/>
     </v-card>
 </template>
 
@@ -13,5 +13,10 @@ import InvoicesTable from "../InvoicesTable";
 export default {
     name: 'Invoices',
     components: {InvoicesTable},
+    methods:{
+        invoicesChange: function (){
+            this.$emit('invoices-change')
+        }
+    }
 }
 </script>

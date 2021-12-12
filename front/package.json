@@ -15,6 +15,7 @@
     "sha256": "^0.2.0",
     "v-currency-field": "^3.1.1",
     "vue": "^2.6.12",
+    "vue-chart-3": "^2.0.1",
     "vue-context": "^5.2.0",
     "vue-datetime": "^1.0.0-beta.14",
     "vue-lodash": "^2.1.2",

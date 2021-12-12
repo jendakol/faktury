@@ -1,4 +1,5 @@
 use chrono::NaiveDate as Date;
+use diesel::sql_types::{Double, Integer};
 use frunk::{Generic, LabelledGeneric};
 
 use crate::dao::Vat;
@@ -141,4 +142,12 @@ pub struct LoginSession {
 pub struct NewSession<'a> {
     pub id: &'a str,
     pub account_id: i32,
+}
+
+#[derive(Queryable, QueryableByName, PartialEq, Debug, Clone)]
+pub struct MonthlyMoney {
+    #[sql_type = "Double"]
+    pub money: f64,
+    #[sql_type = "Integer"]
+    pub month: i32,
 }
