@@ -25,6 +25,7 @@ pub struct DbConfig {
 pub struct AccountsConfig {
     #[serde(deserialize_with = "deserialize_duration")]
     pub login_ttl: Duration,
+    pub login_salt: String,
 }
 
 #[derive(Debug, Deserialize, Clone)]

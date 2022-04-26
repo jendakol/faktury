@@ -36,10 +36,17 @@ export default {
             loginForm: {
                 username: null,
                 password: null,
+                salt: null,
             },
             formDisabled: false,
             selectedTab: 0
         }
+    },
+    mounted() {
+        this.ajax("login-salt",{}).then(resp => {
+            this.loginForm.salt = resp.salt
+            console.log(resp.salt)
+        })
     },
     methods: {
         login(evt) {
@@ -58,7 +65,7 @@ export default {
 
             this.asyncActionWithNotification("account-login", {
                     username: this.loginForm.username,
-                    password: sha256(this.loginForm.password),
+                    password: sha256(this.loginForm.salt + this.loginForm.password),
                 }, "Logging in", (resp) => new Promise((success, error) => {
                     this.formDisabled = false
 

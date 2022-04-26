@@ -2,6 +2,7 @@ table! {
     accounts (id) {
         id -> Integer,
         username -> Varchar,
+        salt -> Varchar,
         password -> Varchar,
         settings -> Text,
     }

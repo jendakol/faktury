@@ -1,5 +1,6 @@
 use actix_http::header::HeaderValue;
 use actix_http::{BoxedPayloadStream, Payload};
+use sha2::{Digest, Sha256};
 use std::future::Future;
 use std::pin::Pin;
 
@@ -59,10 +60,22 @@ pub struct Login {
 pub async fn account_login(data: web::Json<Login>, ctx: web::Data<RequestContext>) -> impl Responder {
     debug!("Trying to login as {}", data.username);
 
-    with_ok(ctx.dao.find_account(&data.username, &data.password), |account| async {
+    with_ok(ctx.dao.find_account(&data.username), |account| async {
         match account {
             Some(account) => {
-                debug!("Found account for {}", data.username);
+                debug!("Found account for {}, will verify password", data.username);
+
+                let mut hasher = Sha256::new();
+                hasher.update(&data.password);
+                hasher.update(&account.salt);
+
+                let hash = hex::encode(hasher.finalize());
+
+                if account.password != hash {
+                    debug!("Could not login as {}, invalid password", data.username);
+                    return HttpResponse::Unauthorized().finish();
+                }
+
                 with_ok(ctx.dao.new_session(&account), |session| async {
                     let session = LoginSession::from(session);
                     // DAO to DTO entity
@@ -470,6 +483,11 @@ pub async fn delete_invoice_row(id: web::Path<u32>, session: LoginSession, ctx: 
         HttpResponse::Ok().body("{\"success\":true}")
     })
     .await
+}
+
+#[post("/login-salt")]
+pub async fn login_salt(ctx: web::Data<RequestContext>) -> impl Responder {
+    HttpResponse::Ok().body(format!("{{ \"salt\":\"{}\" }}", ctx.accounts_config.login_salt))
 }
 
 #[get("/status")]

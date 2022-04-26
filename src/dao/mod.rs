@@ -111,18 +111,12 @@ no_arg_sql_function!(last_insert_id, sql_types::Integer);
 impl Dao {
     // *** ACCOUNT:
 
-    pub async fn find_account(&self, username: &str, password: &str) -> DaoResult<Option<Account>> {
+    pub async fn find_account(&self, username: &str) -> DaoResult<Option<Account>> {
         use schema::accounts::dsl as table;
 
-        self.with_connection(|conn| {
-            table::accounts
-                .filter(table::username.eq(username))
-                .filter(table::password.eq(password))
-                .first(conn)
-                .optional()
-        })
-        .await
-        .map_err(Self::map_db_error)
+        self.with_connection(|conn| table::accounts.filter(table::username.eq(username)).first(conn).optional())
+            .await
+            .map_err(Self::map_db_error)
     }
 
     pub async fn new_session(&self, account: &Account) -> DaoResult<LoginSession> {

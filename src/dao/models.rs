@@ -11,6 +11,7 @@ use super::schema::*;
 pub struct Account {
     pub id: i32,
     pub username: String,
+    pub salt: String,
     pub password: String,
     pub settings: String,
 }

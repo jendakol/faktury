@@ -21,6 +21,7 @@ CREATE TABLE `accounts`
 (
     `id`       INT          NOT NULL AUTO_INCREMENT,
     `username` VARCHAR(100) NOT NULL,
+    `salt`     VARCHAR(10)  NOT NULL,
     `password` VARCHAR(64)  NOT NULL,
     `settings` TEXT         NOT NULL,
     PRIMARY KEY (`id`),

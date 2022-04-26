@@ -12,3 +12,4 @@ max_pool_size = 8
 
 [accounts]
 login_ttl = "2 days"
+# missing: login_salt
