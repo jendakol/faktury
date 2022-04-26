@@ -1,7 +1,7 @@
 <template>
     <v-card width="600" outlined raised :loading="loading">
         <v-card-title>
-            <v-text-field class="faktury-page-header contact-name-text" prefix="Contact" solo v-model="contactData.name" counter="250"/>
+            <v-textarea label="Name" v-model="contactData.name" counter="250" rows="3"/>
         </v-card-title>
 
         <v-card-text>
@@ -74,6 +74,7 @@ export default {
     },
     methods: {
         save: function () {
+            this.contactData.name = this.contactData.name.replaceAll("\n", "\r\n").replaceAll("\r\r\n", "\r\n").replaceAll("\r\n\n", "\r\n")
             this.contactData.address = this.contactData.address.replaceAll("\n", "\r\n").replaceAll("\r\r\n", "\r\n").replaceAll("\r\n\n", "\r\n")
 
             // TODO check for invalid values!

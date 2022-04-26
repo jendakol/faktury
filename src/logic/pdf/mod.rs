@@ -218,7 +218,11 @@ impl PdfCreator {
 
         layer.use_text(header, 10.0, Mm(offset_left), Mm(offset_bottom), font);
         offset_bottom -= 2.0 * LINE_SPACE;
-        layer.use_text(name, 10.0, Mm(offset_left), Mm(offset_bottom), font_bold);
+
+        for line in name.split("\r\n") {
+            offset_bottom -= LINE_SPACE;
+            layer.use_text(line, 10.0, Mm(offset_left), Mm(offset_bottom), font_bold)
+        }
 
         for line in addr.split("\r\n") {
             offset_bottom -= LINE_SPACE;

@@ -12,7 +12,16 @@
                 <v-row class="invoice-row d-flex pa-1">
                     <v-col class="align-center ma-0 pa-0 pt-1 col-code">{{ invoice.code }}</v-col>
                     <v-col class="align-center ma-0 pa-0 pt-1 col-created">{{ formatDate(invoice.created) }}</v-col>
-                    <v-col class="align-center ma-0 pa-0 pt-1 col-contact">{{ invoice.contactName }}</v-col>
+                    <v-col class="align-center ma-0 pa-0 pt-1 col-contact">
+                        <v-tooltip top>
+                            <template v-slot:activator="{ on, attrs }">
+                                <span v-bind="attrs" v-on="on">
+                                    {{ formatName(invoice.contactName) }}
+                                </span>
+                            </template>
+                            <span v-html="formatNameMultiline(invoice.contactName)"></span>
+                        </v-tooltip>
+                    </v-col>
                     <v-col class="align-center ma-0 pa-0 pt-1 col-price">
                         {{ Number((invoice.priceSum).toFixed(2)) }} Kč
                         <v-tooltip top v-if="invoice.payed != null">
@@ -138,6 +147,12 @@ export default {
         formatDate: function (isoString) {
             let date = new Date(isoString)
             return date.toLocaleDateString(this.$store.state.locale)
+        },
+        formatName: function (name) {
+            return name.split("\r\n")[0]
+        },
+        formatNameMultiline: function (name) {
+            return name.replace("\r\n", "<br/>")
         },
         isDelayedWithPayment: function (invoice) {
             return new Date(invoice.payUntil).getTime() < this.today.getTime()

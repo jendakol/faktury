@@ -1,5 +1,5 @@
 use err_context::AnyError;
-use log::debug;
+use log::trace;
 use qrcode_generator::QrCodeEcc;
 
 pub struct QrCode;
@@ -18,7 +18,7 @@ impl QrCode {
 
         let payment_string = format!("SPD*1.0*ACC:{}*AM:{:.2}*CC:{}*X-VS:{}", iban, price, currency, vs,);
 
-        debug!("Payment string: {}", payment_string);
+        trace!("Payment string: {}", payment_string);
 
         Ok(qrcode_generator::to_image(payment_string, QrCodeEcc::Low, 256)?)
     }
