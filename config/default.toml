@@ -1,5 +1,6 @@
 [http]
 listen = "0.0.0.0:8080"
+cors_origins = []
 
 [database]
 host = "localhost"

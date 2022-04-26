@@ -1,6 +1,7 @@
 use actix_web::web::Bytes;
 use err_context::AnyError;
 use log::{debug, warn};
+use std::convert::Infallible;
 
 use pdf::PdfManager;
 use settings::AccountSettings;
@@ -19,7 +20,7 @@ pub async fn download_invoice(
     dao: &Dao,
     pdf_manager: &PdfManager,
     id: u32,
-) -> Result<(Invoice, impl futures::Stream<Item = Result<Bytes, ()>>), AnyError> {
+) -> Result<(Invoice, impl futures::Stream<Item = Result<Bytes, Infallible>>), AnyError> {
     let (invoice, rows) = match dao.get_invoice_with_rows(id).await? {
         Some(iwr) => iwr,
         None => return Err(AnyError::from("Could not find requested invoice")),
@@ -116,7 +117,7 @@ async fn next_invoice_code(
     account: &Account,
     settings: &AccountSettings,
 ) -> Result<String, AnyError> {
-    InvoicesLogic::next_code(dao, &account, &entrepreneur, settings.invoice.naming_schema)
+    InvoicesLogic::next_code(dao, account, entrepreneur, settings.invoice.naming_schema)
         .await
         .map_err(|err| {
             warn!("Could not generate invoice id: {}", err);

@@ -12,12 +12,11 @@ use std::str::FromStr;
 
 use actix_cors::Cors;
 use actix_files::NamedFile;
-use actix_web::{middleware, web, App, FromRequest, HttpRequest, HttpServer, Result as ActixResult};
+use actix_web::{middleware, web, App, HttpRequest, HttpServer, Result as ActixResult};
 use log::{debug, info, trace};
 
 use crate::config::{AccountsConfig, AppConfig};
 use crate::dao::Dao;
-use crate::handlers::LoginSessionExtractorConfig;
 use crate::logic::pdf::PdfManager;
 
 mod config;
@@ -73,12 +72,18 @@ async fn main() {
             accounts_config: config.accounts.clone(),
         };
 
+        let cors = config
+            .http
+            .cors_origins
+            .iter()
+            .fold(Cors::default(), |c, origin| c.allowed_origin(origin))
+            .allow_any_method()
+            .allow_any_header()
+            .supports_credentials();
+
         App::new()
-            .app_data(web::Data::new(request_context.clone()))
-            .app_data(handlers::LoginSession::configure(|_cfg| LoginSessionExtractorConfig {
-                ctx: Some(request_context),
-            }))
-            .wrap(Cors::default()) // TODO limit
+            .app_data(web::Data::new(request_context))
+            .wrap(cors)
             .wrap(middleware::Compress::default())
             .service(handlers::download_invoice)
             .service(handlers::account_login)

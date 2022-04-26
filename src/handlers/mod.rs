@@ -1,9 +1,10 @@
+use actix_http::header::HeaderValue;
+use actix_http::{BoxedPayloadStream, Payload};
 use std::future::Future;
 use std::pin::Pin;
 
 use actix_web::body::BodyStream;
-use actix_web::dev::{Payload, PayloadStream};
-use actix_web::http::HeaderValue;
+use actix_web::web::Data;
 use actix_web::{get, post, web, FromRequest, HttpRequest, HttpResponse, Responder};
 use err_context::AnyError;
 use futures::future::{err, ok};
@@ -35,8 +36,8 @@ pub async fn download_invoice(id: web::Path<u32>, session: LoginSession, ctx: we
             let hvalue = format!("attachment; filename=\"invoice_{}.pdf\"", invoice.code);
 
             HttpResponse::Ok()
-                .set_header("Content-Type", "application/pdf")
-                .set_header("Content-Disposition", hvalue)
+                .insert_header(("Content-Type", "application/pdf"))
+                .insert_header(("Content-Disposition", hvalue))
                 .body(BodyStream::new(stream))
         }
         Err(err) => {
@@ -98,7 +99,7 @@ pub async fn account_logout(session: LoginSession, ctx: web::Data<RequestContext
 
 #[post("/data-get/entrepreneur/{id}")]
 pub async fn get_entrepreneur(entrepreneur_id: web::Path<u32>, session: LoginSession, ctx: web::Data<RequestContext>) -> impl Responder {
-    debug!("Getting entrepreneur data, ID {}", entrepreneur_id);
+    debug!("Getting entrepreneur data, ID {:?}", entrepreneur_id);
 
     if !(session.is_valid_for_entrepreneur(&ctx.dao, *entrepreneur_id).await) {
         debug!("Session {:?} is forbidden to access entrepreneur id {}", session, *entrepreneur_id);
@@ -106,7 +107,7 @@ pub async fn get_entrepreneur(entrepreneur_id: web::Path<u32>, session: LoginSes
     }
 
     with_found(ctx.dao.get_entrepreneur(*entrepreneur_id), |i| async {
-        HttpResponse::Ok().json::<dto::Entrepreneur>(i.into())
+        HttpResponse::Ok().json(Into::<dto::Entrepreneur>::into(i))
     })
     .await
 }
@@ -121,7 +122,7 @@ pub async fn get_invoice(id: web::Path<u32>, session: LoginSession, ctx: web::Da
     }
 
     with_found(ctx.dao.get_invoice(*id), |i| async {
-        HttpResponse::Ok().json::<dto::InvoiceWithAllInfo>(i.into())
+        HttpResponse::Ok().json(Into::<dto::InvoiceWithAllInfo>::into(i))
     })
     .await
 }
@@ -156,7 +157,7 @@ pub async fn get_contact(id: web::Path<u32>, session: LoginSession, ctx: web::Da
     }
 
     with_found(ctx.dao.get_contact(*id), |i| async {
-        HttpResponse::Ok().json::<dto::Contact>(i.into())
+        HttpResponse::Ok().json(Into::<dto::Contact>::into(i))
     })
     .await
 }
@@ -168,7 +169,7 @@ pub async fn list_entrepreneurs(session: LoginSession, ctx: web::Data<RequestCon
     // no access rights check
 
     with_ok(ctx.dao.get_entrepreneurs(session.account_id), |rows| async {
-        HttpResponse::Ok().json::<Vec<dto::Entrepreneur>>(rows.into_iter().map(|r| r.into()).collect())
+        HttpResponse::Ok().json(rows.into_iter().map(|r| r.into()).collect::<Vec<dto::Entrepreneur>>())
     })
     .await
 }
@@ -180,7 +181,7 @@ pub async fn list_contacts(
     params: Option<web::Json<ContactsListParams>>,
     ctx: web::Data<RequestContext>,
 ) -> impl Responder {
-    debug!("Getting contacts list for entrepreneur ID {}", entrepreneur_id);
+    debug!("Getting contacts list for entrepreneur ID {:?}", entrepreneur_id);
 
     if !(session.is_valid_for_entrepreneur(&ctx.dao, *entrepreneur_id).await) {
         debug!("Session {:?} is forbidden to access entrepreneur id {}", session, *entrepreneur_id);
@@ -191,7 +192,7 @@ pub async fn list_contacts(
     let last_months = params.as_ref().and_then(|p| p.last_months);
 
     with_ok(ctx.dao.get_contacts(*entrepreneur_id, limit, last_months), |rows| async {
-        HttpResponse::Ok().json::<Vec<dto::Contact>>(rows.into_iter().map(|r| r.into()).collect())
+        HttpResponse::Ok().json(rows.into_iter().map(|r| r.into()).collect::<Vec<dto::Contact>>())
     })
     .await
 }
@@ -203,7 +204,7 @@ pub async fn list_invoices(
     params: Option<web::Json<InvoicesListParams>>,
     ctx: web::Data<RequestContext>,
 ) -> impl Responder {
-    debug!("Getting invoices list for entrepreneur ID {}", entrepreneur_id);
+    debug!("Getting invoices list for entrepreneur ID {:?}", entrepreneur_id);
 
     if !(session.is_valid_for_entrepreneur(&ctx.dao, *entrepreneur_id).await) {
         debug!("Session {:?} is forbidden to access entrepreneur id {}", session, *entrepreneur_id);
@@ -213,7 +214,7 @@ pub async fn list_invoices(
     let limit = params.and_then(|p| p.last);
 
     with_ok(ctx.dao.get_invoices(*entrepreneur_id, limit), |rows| async {
-        HttpResponse::Ok().json::<Vec<dto::InvoiceWithAllInfo>>(rows.into_iter().map(|r| r.into()).collect())
+        HttpResponse::Ok().json(rows.into_iter().map(|r| r.into()).collect::<Vec<dto::InvoiceWithAllInfo>>())
     })
     .await
 }
@@ -228,16 +229,16 @@ pub async fn list_invoice_rows(id: web::Path<u32>, session: LoginSession, ctx: w
     }
 
     with_ok(ctx.dao.get_invoice_rows(*id), |rows| async {
-        HttpResponse::Ok().json::<Vec<dto::InvoiceRow>>(rows.into_iter().map(|r| r.into()).collect())
+        HttpResponse::Ok().json(rows.into_iter().map(|r| r.into()).collect::<Vec<dto::InvoiceRow>>())
     })
     .await
 }
 
 #[post("/data-get/yearly-stats/{year}/{entrepreneur_id}")]
 pub async fn get_yearly_stats(params: web::Path<(u16, u32)>, session: LoginSession, ctx: web::Data<RequestContext>) -> impl Responder {
-    let (year, entrepreneur_id) = (params.0, params.1);
+    let (year, entrepreneur_id) = params.into_inner();
 
-    debug!("Getting yearly stats for entrepreneur ID {}, year {}", entrepreneur_id, year);
+    debug!("Getting yearly stats for entrepreneur ID {}, year {:?}", entrepreneur_id, year);
 
     if !(session.is_valid_for_entrepreneur(&ctx.dao, entrepreneur_id).await) {
         debug!("Session {:?} is forbidden to access entrepreneur id {}", session, entrepreneur_id);
@@ -245,14 +246,7 @@ pub async fn get_yearly_stats(params: web::Path<(u16, u32)>, session: LoginSessi
     }
 
     with_ok(ctx.dao.get_yearly_stats(entrepreneur_id, year), |data| async move {
-        // println!("{:?}", &paid);
-        // println!("{:?}", &unpaid);
-
-        // rows.sorted_by(|a, b| a.)
-
-        // let data = paid.into_iter().map(|s| (s.month as u8, s.money)).collect::<HashMap<u8, f64>>();
-
-        return HttpResponse::Ok().json::<YearlyStats>(data.into());
+        HttpResponse::Ok().json(Into::<YearlyStats>::into(data))
     })
     .await
 }
@@ -269,7 +263,7 @@ pub async fn insert_entrepreneur(
     with_ok(
         ctx.dao
             .insert_entrepreneur(&entrepreneur.code, &entrepreneur.name, &entrepreneur.address),
-        |i| async { HttpResponse::Ok().json::<dto::Entrepreneur>(i.into()) },
+        |i| async { HttpResponse::Ok().json(Into::<dto::Entrepreneur>::into(i)) },
     )
     .await
 }
@@ -294,7 +288,7 @@ pub async fn insert_contact(contact: web::Json<NewContact>, session: LoginSessio
             &contact.address,
             &contact.vat,
         ),
-        |i| async { HttpResponse::Ok().json::<dto::Contact>(i.into()) },
+        |i| async { HttpResponse::Ok().json(Into::<dto::Contact>::into(i)) },
     )
     .await
 }
@@ -314,7 +308,7 @@ pub async fn insert_invoice(invoice: web::Json<NewInvoice>, session: LoginSessio
     }
 
     with_ok(logic::insert_invoice(&ctx.dao, &invoice), |i| async {
-        HttpResponse::Ok().json::<dto::InvoiceWithAllInfo>(i.into())
+        HttpResponse::Ok().json(Into::<dto::InvoiceWithAllInfo>::into(i))
     })
     .await
 }
@@ -330,7 +324,7 @@ pub async fn copy_invoice(invoice_id: web::Path<u32>, session: LoginSession, ctx
 
     with_found(ctx.dao.get_invoice(*invoice_id), |(original, _, _)| async {
         with_ok(logic::copy_invoice(&ctx.dao, original), |i| async {
-            HttpResponse::Ok().json::<dto::Invoice>(i.into())
+            HttpResponse::Ok().json(Into::<dto::Invoice>::into(i))
         })
         .await
     })
@@ -349,7 +343,7 @@ pub async fn insert_invoice_row(row: web::Json<NewInvoiceRow>, session: LoginSes
     with_ok(
         ctx.dao
             .insert_invoice_row(row.invoice_id, &row.item_name, row.item_price, row.item_count),
-        |i| async { HttpResponse::Ok().json::<dto::InvoiceRow>(i.into()) },
+        |i| async { HttpResponse::Ok().json(Into::<dto::InvoiceRow>::into(i)) },
     )
     .await
 }
@@ -420,7 +414,7 @@ pub async fn update_invoice_row(row: web::Json<InvoiceRow>, session: LoginSessio
 
 #[post("/data-delete/entrepreneur/{id}")]
 pub async fn delete_entrepreneur(id: web::Path<u32>, session: LoginSession, ctx: web::Data<RequestContext>) -> impl Responder {
-    debug!("Deleting entrepreneur ID {}", id);
+    debug!("Deleting entrepreneur ID {:?}", id);
 
     if !(session.is_valid_for_entrepreneur(&ctx.dao, *id).await) {
         debug!("Session {:?} is forbidden to access entrepreneur id {}", session, *id);
@@ -435,7 +429,7 @@ pub async fn delete_entrepreneur(id: web::Path<u32>, session: LoginSession, ctx:
 
 #[post("/data-delete/contact/{id}")]
 pub async fn delete_contact(id: web::Path<u32>, session: LoginSession, ctx: web::Data<RequestContext>) -> impl Responder {
-    debug!("Deleting contact ID {}", id);
+    debug!("Deleting contact ID {:?}", id);
 
     if !(session.is_valid_for_contact(&ctx.dao, *id).await) {
         debug!("Session {:?} is forbidden to access contact id {}", session, *id);
@@ -450,7 +444,7 @@ pub async fn delete_contact(id: web::Path<u32>, session: LoginSession, ctx: web:
 
 #[post("/data-delete/invoice/{id}")]
 pub async fn delete_invoice(id: web::Path<u32>, session: LoginSession, ctx: web::Data<RequestContext>) -> impl Responder {
-    debug!("Deleting invoice ID {}", id);
+    debug!("Deleting invoice ID {:?}", id);
 
     if !(session.is_valid_for_invoice(&ctx.dao, *id).await) {
         debug!("Session {:?} is forbidden to access invoice id {}", session, *id);
@@ -465,7 +459,7 @@ pub async fn delete_invoice(id: web::Path<u32>, session: LoginSession, ctx: web:
 
 #[post("/data-delete/invoice-row/{id}")]
 pub async fn delete_invoice_row(id: web::Path<u32>, session: LoginSession, ctx: web::Data<RequestContext>) -> impl Responder {
-    debug!("Deleting invoice row ID {}", id);
+    debug!("Deleting invoice row ID {:?}", id);
 
     if !(session.is_valid_for_invoice_row(&ctx.dao, *id).await) {
         debug!("Session {:?} is forbidden to access invoice id {}", session, *id);
@@ -515,11 +509,11 @@ where
 impl FromRequest for LoginSession {
     type Error = actix_web::Error;
     type Future = Pin<Box<dyn futures::Future<Output = Result<Self, Self::Error>>>>;
-    type Config = LoginSessionExtractorConfig;
 
-    fn from_request(req: &HttpRequest, payload: &mut Payload<PayloadStream>) -> Self::Future {
-        let config = req.app_data::<LoginSessionExtractorConfig>().expect("Could not extract config");
-        let ctx = config.ctx.as_ref().expect("Request config not available").clone();
+    fn from_request(req: &HttpRequest, payload: &mut Payload<BoxedPayloadStream>) -> Self::Future {
+        // The cloning here is for free, it's `Arc` inside
+        let ctx = req.app_data::<Data<RequestContext>>().expect("Could not extract config").clone();
+
         use futures::StreamExt;
 
         if req.query_string().contains("auth=1") {
@@ -561,11 +555,6 @@ impl FromRequest for LoginSession {
     }
 }
 
-#[derive(Default, Clone)]
-pub struct LoginSessionExtractorConfig {
-    pub ctx: Option<RequestContext>,
-}
-
 impl LoginSession {
     fn try_parse_from_header(header: &HeaderValue) -> Result<LoginSession, AnyError> {
         let str = header.to_str()?;
@@ -592,7 +581,7 @@ impl LoginSession {
     }
 
     fn try_authenticate(
-        ctx: RequestContext,
+        ctx: Data<RequestContext>,
         session: LoginSession,
     ) -> Pin<Box<dyn Future<Output = Result<LoginSession, actix_web::Error>>>> {
         async move {

@@ -7,6 +7,7 @@ use serde::{Deserialize, Deserializer};
 #[derive(Debug, Deserialize, Clone)]
 pub struct HttpConfig {
     pub listen: String,
+    pub cors_origins: Vec<String>,
 }
 
 #[derive(Debug, Deserialize, Clone)]
@@ -35,9 +36,7 @@ pub struct AppConfig {
 
 impl AppConfig {
     pub fn load(path: &str) -> Result<Self, AnyError> {
-        let mut config = config::Config::new();
-
-        config.merge(File::with_name("config/default"))?;
+        let config = config::Config::builder();
 
         let content: String = {
             use std::fs::File;
@@ -49,10 +48,12 @@ impl AppConfig {
             content
         };
 
-        config.merge(config::File::from_str(content.as_ref(), config::FileFormat::Toml))?;
-
         config
-            .try_into()
+            .add_source(File::with_name("config/default"))
+            .add_source(config::File::from_str(content.as_ref(), config::FileFormat::Toml))
+            .build()
+            .map_err(|e| AnyError::from(format!("Could not load config: {}", e)))?
+            .try_deserialize()
             .map_err(|e| AnyError::from(format!("Could not map config: {}", e)))
     }
 }

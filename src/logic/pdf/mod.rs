@@ -1,9 +1,3 @@
-use std::collections::HashMap;
-use std::fs::File;
-use std::io::BufWriter;
-use std::sync::Arc;
-use std::{io, thread};
-
 use actix_web::web::Bytes;
 use chrono::NaiveDate;
 use err_context::AnyError;
@@ -11,7 +5,14 @@ use futures::channel::mpsc;
 use futures::{SinkExt, StreamExt};
 use itertools::Itertools;
 use log::{debug, trace};
+use printpdf::image_crate::bmp::BmpDecoder;
 use printpdf::*;
+use std::collections::HashMap;
+use std::convert::Infallible;
+use std::fs::File;
+use std::io::BufWriter;
+use std::sync::Arc;
+use std::{io, thread};
 
 use crate::dao::{Contact, Entrepreneur, Invoice, InvoiceRow, Vat};
 use crate::logic::pdf::qrcode::QrCode;
@@ -52,7 +53,7 @@ impl PdfManager {
         contact: Contact,
         invoice: Invoice,
         invoice_rows: Vec<InvoiceRow>,
-    ) -> impl futures::Stream<Item = Result<Bytes, ()>> {
+    ) -> impl futures::Stream<Item = Result<Bytes, Infallible>> {
         let (tx, rx) = mpsc::channel::<Vec<u8>>(1024);
         let w = BlockingWriter(tx);
 
@@ -68,7 +69,7 @@ impl PdfManager {
             }
         });
 
-        rx.map(Bytes::from).map(Ok::<Bytes, ()>)
+        rx.map(Bytes::from).map(Ok::<Bytes, Infallible>)
     }
 }
 
@@ -215,13 +216,13 @@ impl PdfCreator {
 
         let layer = &self.current_layer;
 
-        layer.use_text(header, 10.0, Mm(offset_left), Mm(offset_bottom), &font);
+        layer.use_text(header, 10.0, Mm(offset_left), Mm(offset_bottom), font);
         offset_bottom -= 2.0 * LINE_SPACE;
-        layer.use_text(name, 10.0, Mm(offset_left), Mm(offset_bottom), &font_bold);
+        layer.use_text(name, 10.0, Mm(offset_left), Mm(offset_bottom), font_bold);
 
         for line in addr.split("\r\n") {
             offset_bottom -= LINE_SPACE;
-            layer.use_text(line, 10.0, Mm(offset_left), Mm(offset_bottom), &font)
+            layer.use_text(line, 10.0, Mm(offset_left), Mm(offset_bottom), font)
         }
 
         // ičo
@@ -230,7 +231,7 @@ impl PdfCreator {
             None => String::new(),
             Some(code) => format!("IČO {}", code), // TODO hard code value
         };
-        layer.use_text(code, 10.0, Mm(offset_left), Mm(offset_bottom), &font);
+        layer.use_text(code, 10.0, Mm(offset_left), Mm(offset_bottom), font);
 
         // dič
         offset_bottom -= LINE_SPACE;
@@ -241,7 +242,7 @@ impl PdfCreator {
         };
 
         if let Some(vat) = vat {
-            layer.use_text(vat, 10.0, Mm(offset_left), Mm(offset_bottom), &font);
+            layer.use_text(vat, 10.0, Mm(offset_left), Mm(offset_bottom), font);
         }
 
         Ok(offset_bottom)
@@ -291,7 +292,7 @@ impl PdfCreator {
             8.0,
             Mm(offset_left),
             Mm(offset_bottom),
-            &font,
+            font,
         );
         offset_bottom -= LINE_SPACE;
         layer.use_text(
@@ -299,10 +300,10 @@ impl PdfCreator {
             8.0,
             Mm(offset_left),
             Mm(offset_bottom),
-            &font,
+            font,
         );
         offset_bottom -= LINE_SPACE; // TODO hard code value
-        layer.use_text(format!("zákona: {}.", office_place), 8.0, Mm(offset_left), Mm(offset_bottom), &font);
+        layer.use_text(format!("zákona: {}.", office_place), 8.0, Mm(offset_left), Mm(offset_bottom), font);
 
         Ok(())
     }
@@ -313,9 +314,9 @@ impl PdfCreator {
         let layer = &self.current_layer;
 
         // TODO hard code value
-        layer.use_text("Předáno dne:", 8.0, Mm(offset_left), Mm(offset_bottom), &font);
+        layer.use_text("Předáno dne:", 8.0, Mm(offset_left), Mm(offset_bottom), font);
         offset_bottom -= LINE_SPACE;
-        layer.use_text("Převzal:", 8.0, Mm(offset_left), Mm(offset_bottom), &font);
+        layer.use_text("Převzal:", 8.0, Mm(offset_left), Mm(offset_bottom), font);
 
         Ok(())
     }
@@ -351,7 +352,7 @@ impl PdfCreator {
             10.0,
             Mm(PAPER_WIDTH - PAPER_BORDER - Self::price_width(&total_price_formatted) - WIDTH_SPACE - WIDTH_CURR_SYMBOL),
             Mm(offset_bottom),
-            &font_bold,
+            font_bold,
         );
         offset_bottom += 2.0 * 3.0 + LINE_SPACE;
 
@@ -365,7 +366,7 @@ impl PdfCreator {
 
             let mut base_row = true;
             for item_name_row in item_name_rows {
-                layer.use_text(item_name_row, 10.0, Mm(offset_left), Mm(offset_bottom), &font);
+                layer.use_text(item_name_row, 10.0, Mm(offset_left), Mm(offset_bottom), font);
 
                 if base_row {
                     let price_formatted = PdfCreator::format_price(price, use_decs);
@@ -377,7 +378,7 @@ impl PdfCreator {
                         10.0,
                         Mm(left_align),
                         Mm(offset_bottom),
-                        &font,
+                        font,
                     );
 
                     base_row = false;
@@ -419,36 +420,36 @@ impl PdfCreator {
         let layer = &self.current_layer;
 
         // TODO hard code value
-        layer.use_text("PLATEBNÍ ÚDAJE", 10.0, Mm(offset_left), Mm(offset_bottom), &font);
+        layer.use_text("PLATEBNÍ ÚDAJE", 10.0, Mm(offset_left), Mm(offset_bottom), font);
 
         offset_bottom -= 2.0 * LINE_SPACE;
 
         // TODO hard code value
-        layer.use_text("zaplaťte prosím na účet č.", 10.0, Mm(offset_left), Mm(offset_bottom), &font);
+        layer.use_text("zaplaťte prosím na účet č.", 10.0, Mm(offset_left), Mm(offset_bottom), font);
         layer.use_text(
             format!("{}/{:04}", account_no, bank_code),
             10.0,
             Mm(offset_left + 37.0),
             Mm(offset_bottom),
-            &font_bold,
+            font_bold,
         );
 
         offset_bottom -= LINE_SPACE;
 
         // TODO hard code value
-        layer.use_text("s variabilním symbolem", 10.0, Mm(offset_left), Mm(offset_bottom), &font);
-        layer.use_text(vs, 10.0, Mm(offset_left + 34.5), Mm(offset_bottom), &font_bold);
+        layer.use_text("s variabilním symbolem", 10.0, Mm(offset_left), Mm(offset_bottom), font);
+        layer.use_text(vs, 10.0, Mm(offset_left + 34.5), Mm(offset_bottom), font_bold);
 
         offset_bottom = PAPER_BORDER;
 
         // TODO hard code value
-        layer.use_text("do", 10.0, Mm(offset_left), Mm(offset_bottom), &font);
+        layer.use_text("do", 10.0, Mm(offset_left), Mm(offset_bottom), font);
         layer.use_text(
             due_date.format("%d.%m.%Y").to_string(),
             10.0,
             Mm(offset_left + 5.0),
             Mm(offset_bottom),
-            &font_bold,
+            font_bold,
         );
 
         let qrcode = ImageXObject {
@@ -475,12 +476,14 @@ impl PdfCreator {
         let qrcode_image = Image::from(qrcode);
         qrcode_image.add_to_layer(
             self.current_layer.clone(),
-            Some(Mm(PAPER_BORDER - 1.2)),
-            Some(Mm(PAPER_BORDER - 1.2)),
-            None,
-            None,
-            None,
-            Some(2.54 / (qr_size / 10.0) * 256.0),
+            ImageTransform {
+                translate_x: Some(Mm(PAPER_BORDER - 1.2)),
+                translate_y: Some(Mm(PAPER_BORDER - 1.2)),
+                rotate: None,
+                scale_x: None,
+                scale_y: None,
+                dpi: Some(2.54 / (qr_size / 10.0) * 256.0),
+            },
         );
 
         Ok(())
@@ -488,16 +491,18 @@ impl PdfCreator {
 
     fn add_img(&self, path: &str, x: f64, y: f64) -> Result<(), AnyError> {
         let mut image_file = File::open(format!("imgs/{}", path))?;
-        let image = Image::try_from(image::bmp::BmpDecoder::new(&mut image_file)?)?;
+        let image = Image::try_from(BmpDecoder::new(&mut image_file)?)?;
 
         image.add_to_layer(
             self.current_layer.clone(),
-            Some(Mm(x)),
-            Some(Mm(y)),
-            None,
-            None,
-            None,
-            Some(2.54 / (4.0 / 10.0) * 113.0),
+            ImageTransform {
+                translate_x: Some(Mm(x)),
+                translate_y: Some(Mm(y)),
+                rotate: None,
+                scale_x: None,
+                scale_y: None,
+                dpi: Some(2.54 / (4.0 / 10.0) * 113.0),
+            },
         );
 
         Ok(())
