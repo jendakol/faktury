@@ -65,10 +65,10 @@ export default {
                     if (resp.error != null) {
                         console.log(resp.error)
 
-                        if (resp.error.response.status === 401) {
+                        if (resp.error.response !== undefined && resp.error.response.status === 401) {
                             error("Login unsuccessful!")
                         } else {
-                            error("Login has failed due to uknown error!")
+                            error("Login has failed due to an unknown error!")
                         }
                     } else if (resp.encodedValue !== "") {
                         let session = JSON.parse(atob(resp.encodedValue))

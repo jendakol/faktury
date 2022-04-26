@@ -77,7 +77,7 @@ let GlobalFunctions = {
                                         }
                                     }
                                 )
-                                returnFailure()
+                                returnFailure(errText)
                             })
                     }).catch(err => {
                         console.log("ERROR:" + JSON.stringify(err.response.data));
