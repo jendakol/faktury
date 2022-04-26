@@ -60,6 +60,7 @@ export default {
         // TODO don't allow to save when rules fail
 
         return {
+            invoiceData: this.data,
             currency: "Kč",
             rowSavingClass: "row-unsaved",
             rowNormalClass: "row-saved",
@@ -84,10 +85,10 @@ export default {
     computed: {
         name: {
             get: function () {
-                return this.data.itemName
+                return this.invoiceData.itemName
             },
             set: function (value) {
-                let rowData = this.data
+                let rowData = this.invoiceData
                 rowData.itemName = value
                 this.delayedSave()
                 this.$emit("row-updated", rowData)
@@ -95,10 +96,10 @@ export default {
         },
         count: {
             get: function () {
-                return this.data.itemCount
+                return this.invoiceData.itemCount
             },
             set: function (value) {
-                let rowData = this.data
+                let rowData = this.invoiceData
                 rowData.itemCount = parseInt(value, 10)
                 this.delayedSave()
                 this.$emit("row-updated", rowData)
@@ -106,10 +107,10 @@ export default {
         },
         price: {
             get: function () {
-                return this.data.itemPrice
+                return this.invoiceData.itemPrice
             },
             set: function (value) {
-                let rowData = this.data
+                let rowData = this.invoiceData
                 rowData.itemPrice = value
                 this.delayedSave()
                 this.$emit("row-updated", rowData)
@@ -135,22 +136,22 @@ export default {
                 if (!saved) this.saving = true
             }, 300)
 
-            this.data.itemName = this.data.itemName.replaceAll("\n", "\r\n").replaceAll("\r\r\n", "\r\n").replaceAll("\r\n\n", "\r\n")//   tady je bug!!!      Cannot read property 'replace' of undefined
+            this.invoiceData.itemName = this.invoiceData.itemName.replaceAll("\n", "\r\n").replaceAll("\r\r\n", "\r\n").replaceAll("\r\n\n", "\r\n")//   tady je bug!!!      Cannot read property 'replace' of undefined
 
             // TODO better validation?
 
-            if (this.data.itemName === undefined || this.data.itemName.trim().length === 0 || this.data.itemCount === 0 || this.data.itemPrice === 0) {
+            if (this.invoiceData.itemName === undefined || this.invoiceData.itemName.trim().length === 0 || this.invoiceData.itemCount === 0 || this.invoiceData.itemPrice === 0) {
                 console.log("Invalid data, not saving row")
                 return;
             }
 
             console.log("Save invoice row: ")
-            console.log(this.data)
+            console.log(this.invoiceData)
 
-            this.ajax("data-update/invoice-row", this.data).then(resp => {
+            this.ajax("data-update/invoice-row", this.invoiceData).then(resp => {
                 if (resp.success) {
                     saved = true
-                    this.$emit("row-saved", this.data.id)
+                    this.$emit("row-saved", this.invoiceData.id)
                 } else {
                     this.$snotify.error("Could not save the row!", "Saving")
                 }
@@ -171,11 +172,11 @@ export default {
                 buttons: [
                     {
                         text: 'Yes', action: (toast) => {
-                            console.log("Deleting invoice row " + this.data.id)
+                            console.log("Deleting invoice row " + this.invoiceData.id)
 
-                            this.ajax("data-delete/invoice-row/" + this.data.id).then(r => {
+                            this.ajax("data-delete/invoice-row/" + this.invoiceData.id).then(r => {
                                 if (r.success) {
-                                    this.$emit("row-deleted", this.data.id)
+                                    this.$emit("row-deleted", this.invoiceData.id)
                                 } else {
                                     this.$snotify.error("Could not delete the row!", "Delete");
                                 }

@@ -47,7 +47,7 @@
 
 <script>
 export default {
-    name: 'Contacts',
+    name: 'DashboardContacts',
     mounted() {
         // TODO paremetrize number of months
         this.ajax('data-get/contacts/' + this.getEntrepreneurId(), {count: 3, lastMonths: 6}).then(data => {

@@ -11,7 +11,7 @@
 import InvoicesTable from "../InvoicesTable";
 
 export default {
-    name: 'Invoices',
+    name: 'DashboardInvoices',
     components: {InvoicesTable},
     methods:{
         invoicesChange: function (){

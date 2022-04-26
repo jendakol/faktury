@@ -1,5 +1,5 @@
 <template>
-    <v-card width="1000" outlined raised :loading="loading" class="ma-0 pa-2 pt-1">
+    <v-card width="1000" outlined raised :loading="loading" class="ma-0 mt-4">
         <v-card-title>
             <h1 class="faktury-page-header">Your contacts</h1>
         </v-card-title>
@@ -16,7 +16,7 @@
 
         <v-card v-for="contact in filteredContacts" :key="contact.id"
                 :to="{ name: 'ContactDetail', params: { id: contact.id } }"
-                class="ma-0 mt-1 pa-0"
+                class="mt-1 ml-2 mr-2 pa-0"
                 no-gutters
                 hover
                 link
@@ -119,7 +119,7 @@
 import {SnotifyPosition} from "vue-snotify";
 
 export default {
-    name: 'Contacts',
+    name: 'ContactsPage',
     mounted() {
         this.ajax('data-get/contacts/' + this.getEntrepreneurId()).then(data => {
             this.contacts = data;

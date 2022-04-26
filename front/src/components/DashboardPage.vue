@@ -12,7 +12,7 @@ import DashboardContacts from "@/components/dashboard/DashboardContacts";
 import DashboardYearOverview from "@/components/dashboard/DashboardYearOverview";
 
 export default {
-    name: 'Dashboard',
+    name: 'DashboardPage',
     components: {
         DashboardContacts,
         DashboardInvoices,

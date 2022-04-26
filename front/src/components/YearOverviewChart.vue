@@ -8,7 +8,7 @@
 import {BarChart} from 'vue-chart-3';
 
 export default {
-    name: 'Home',
+    name: 'YearOverviewChart',
     components: {BarChart},
     props: {
         year: Number,

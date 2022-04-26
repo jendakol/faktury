@@ -1,5 +1,5 @@
 <template>
-    <v-card width="1000" outlined raised>
+    <v-card width="1000" outlined raised class="ma-0 mt-4">
         <v-card-title>
             <h1 class="faktury-page-header">Your invoices</h1>
         </v-card-title>
@@ -20,7 +20,7 @@ import InvoicesTable from "./InvoicesTable";
 import ContactsDialog from "./ContactsDialog";
 
 export default {
-    name: 'Invoices',
+    name: 'InvoicesPage',
     components: {
         ContactsDialog,
         InvoicesTable
